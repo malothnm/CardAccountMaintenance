@@ -15,10 +15,12 @@ import java.util.Map;
 @Builder
 public class CardAccumValuesDTO {
 
-    private String cardNumber;
+    private String cardId;
 
     private Integer org;
     private Integer product;
+
+    private List<PeriodicCardLimitDTO> periodicCardLimitDTOList;
 
     private List<PeriodicCardLimitDTO> periodicCardAccumulatedValueList;
 }

@@ -5,9 +5,9 @@ import reactor.core.publisher.Mono;
 
 public interface NumberService {
 
-    Mono<String> generateNewCustomerNumber();
-    Mono<String> generateNewAccountNumber();
-    Mono<String> generateNewCardNumber(Integer org, Integer product );
+    Mono<String> generateNewCustomerId();
+    Mono<String> generateNewAccountId();
+    Mono<String> generateNewCardId();
     Mono<String> generateInstrumentNumber(InstrumentType instrumentType,Integer org, Integer product);
 
 }

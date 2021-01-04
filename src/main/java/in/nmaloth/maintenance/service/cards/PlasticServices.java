@@ -15,15 +15,14 @@ public interface PlasticServices {
 
 
     Mono<Plastic> fetchPlasticInfo(String plasticId,String cardNumber);
-    Mono<Plastic> deletePlasticInfo(String plasticId,String cardNumber);
+    Mono<CardsBasic> deletePlasticInfo(String plasticId,String cardNumber);
     Flux<Plastic> fetchAllPlasticInfo(String cardNumber);
-    Flux<Plastic> deleteAllPlastics(String cardNumber);
-    Mono<Plastic> savePlastic(Plastic plastic);
-    Mono<Plastic> createNewPlastic(PlasticUpdateDto plasticUpdateDto);
+    Mono<CardsBasic> deleteAllPlastics(String cardNumber);
+    Mono<CardsBasic> createNewPlastic(PlasticUpdateDto plasticUpdateDto);
     Mono<Plastic> updatePlasticData(PlasticUpdateDto plasticUpdateDto);
     void validatePlasticForNewPlastic(PlasticUpdateDto plasticUpdateDto);
 
     PlasticsDTO convertPlasticDTO(Plastic plastic);
-    Plastic updatePlastic(PlasticUpdateDto plasticUpdateDto, CardsBasic cardsBasic, ProductDef productDef, List<Plastic> plasticList);
+    Plastic updatePlastic(PlasticUpdateDto plasticUpdateDto, CardsBasic cardsBasic, ProductDef productDef);
 
 }

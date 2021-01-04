@@ -7,8 +7,6 @@ import java.util.Optional;
 
 public interface AccountAccumValuesRepository extends CrudRepository<AccountAccumValues,String>{
 
-    Optional<AccountAccumValues> findByAccountNumber(String accountNumber);
-    void deleteByAccountNumber(String accountNumber);
 
 
 }

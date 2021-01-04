@@ -41,24 +41,5 @@ public class AccountAccumValuesDataServiceImpl implements AccountAccumValuesData
         return Mono.fromFuture(completableFuture);
     }
 
-    @Override
-    public Mono<Optional<AccountAccumValues>> findAccountAccumValuesByAcctNumber(String acctNumber) {
 
-        CompletableFuture<Optional<AccountAccumValues>> completableFuture = CompletableFuture
-                .supplyAsync(()-> accountAccumValuesRepository.findByAccountNumber(acctNumber));
-
-        return Mono.fromFuture(completableFuture);
-    }
-
-    @Override
-    public Mono<Optional<AccountAccumValues>> deleteAccountAccumValuesByAcctNumber(String acctNumber) {
-
-        return findAccountAccumValuesByAcctNumber(acctNumber)
-                .doOnNext(accountAccumValuesOptional ->{
-                    if(accountAccumValuesOptional.isPresent()){
-                        accountAccumValuesRepository.delete(accountAccumValuesOptional.get());
-                    }
-                } )
-                ;
-    }
 }

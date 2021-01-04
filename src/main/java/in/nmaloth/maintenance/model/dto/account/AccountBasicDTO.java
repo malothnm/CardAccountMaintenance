@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class AccountBasicDTO {
 
-    private String accountNumber;
+    private String accountId;
 
     private Integer org;
     private Integer product;
@@ -37,6 +37,5 @@ public class AccountBasicDTO {
     private LocalDateTime dateTransfer;
 
 
-    private List<BalanceTypesDTO> balanceTypesDTOList;
 
 }

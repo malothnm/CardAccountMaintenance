@@ -5,6 +5,7 @@ import in.nmaloth.entity.account.AccountType;
 import in.nmaloth.entity.account.BalanceTypes;
 import in.nmaloth.entity.card.*;
 import in.nmaloth.entity.customer.*;
+import in.nmaloth.entity.instrument.Instrument;
 import in.nmaloth.entity.instrument.InstrumentType;
 import in.nmaloth.maintenance.exception.InvalidEnumConversion;
 import in.nmaloth.maintenance.exception.InvalidInputDataException;
@@ -312,6 +313,7 @@ public class Util {
             case "4": return InstrumentType.TEMP_CARD;
             case "5": return InstrumentType.CARD_LESS;
             case "6": return InstrumentType.ONE_TIME_USE_CARD;
+            case "7": return InstrumentType.ACCOUNT_NUMBER;
         }
         log.error(" Invalid Instrument Type .. {}", instrumentType);
         throw new InvalidEnumConversion("Invalid Instrument Type");
@@ -328,6 +330,7 @@ public class Util {
             case TEMP_CARD: return "4";
             case CARD_LESS: return "5";
             case ONE_TIME_USE_CARD: return "6";
+            case ACCOUNT_NUMBER: return "7";
         }
         log.error("Invalid Instrument Type ...");
         throw new InvalidEnumConversion("Invalid Instrument Type");

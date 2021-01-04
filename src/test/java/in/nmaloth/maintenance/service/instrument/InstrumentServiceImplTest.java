@@ -103,7 +103,7 @@ class InstrumentServiceImplTest {
 
         InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true,UUID.randomUUID().toString().replace("-",""));
 
-        instrumentAddDTO.setCardNumber(cardsBasic.getCardNumber());
+        instrumentAddDTO.setCardId(cardsBasic.getCardId());
 
         Instrument instrumentDto = instrumentService.createNewInstrument(instrumentAddDTO)
                 .block();
@@ -135,7 +135,7 @@ class InstrumentServiceImplTest {
 
         InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true,UUID.randomUUID().toString().replace("-",""));
 
-        instrumentAddDTO.setCardNumber(cardsBasic.getCardNumber());
+        instrumentAddDTO.setCardId(cardsBasic.getCardId());
 
         Instrument instrument = instrumentService.createNewInstrument(instrumentAddDTO)
                 .block();
@@ -169,12 +169,12 @@ class InstrumentServiceImplTest {
         String deleteAccountNumber = UUID.randomUUID().toString().replace("-","");
 
         InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true,deleteAccountNumber);
-        instrumentAddDTO.setCardNumber(cardsBasic.getCardNumber());
+        instrumentAddDTO.setCardId(cardsBasic.getCardId());
         Instrument instrumentDto = instrumentService.createNewInstrument(instrumentAddDTO)
                 .block();
 
         InstrumentUpdateDTO instrumentUpdateDTO = updateInstrumentDTO(true,null,deleteAccountNumber);
-        instrumentUpdateDTO.setCardNumber(cardsBasic.getCardNumber());
+        instrumentUpdateDTO.setCardId(cardsBasic.getCardId());
 
         Instrument instrumentDto1 = instrumentService.updateInstrument(instrumentUpdateDTO)
                 .block();
@@ -185,7 +185,7 @@ class InstrumentServiceImplTest {
         assertAll(
                 () -> assertEquals(instrumentUpdateDTO.getInstrumentNumber(), instrument.getInstrumentNumber()),
 //                () -> assertEquals(instrumentDto2.getAccountNumber(), instrumentDto1.getAccountNumber()),
-                () -> assertEquals(instrumentAddDTO.getCardNumber(), instrument.getCardNumber()),
+                () -> assertEquals(instrumentAddDTO.getCardId(), instrument.getCardNumber()),
                 () -> assertEquals(cardsBasic.getCustomerNumber(), instrument.getCustomerNumber()),
                 () -> assertEquals(cardsBasic.getCorporateNumber(), cardsBasic.getCorporateNumber()),
                 () -> assertEquals(Util.getBlockType(instrumentUpdateDTO.getBlockType()), instrument.getBlockType()),
@@ -207,7 +207,7 @@ class InstrumentServiceImplTest {
 
 
         InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true,deleteAccountNumber);
-        instrumentAddDTO.setCardNumber(cardsBasic.getCardNumber());
+        instrumentAddDTO.setCardId(cardsBasic.getCardId());
         Instrument instrumentDto = instrumentService.createNewInstrument(instrumentAddDTO)
                 .block();
 
@@ -229,7 +229,7 @@ class InstrumentServiceImplTest {
         String deleteAccountNumber = UUID.randomUUID().toString().replace("-","");
 
         InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true,deleteAccountNumber);
-        instrumentAddDTO.setCardNumber(cardsBasic.getCardNumber());
+        instrumentAddDTO.setCardId(cardsBasic.getCardId());
         Instrument instrumentDto = instrumentService.createNewInstrument(instrumentAddDTO)
                 .block();
 
@@ -248,7 +248,7 @@ class InstrumentServiceImplTest {
         String deleteAccountNumber = UUID.randomUUID().toString().replace("-","");
 
         InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true,deleteAccountNumber);
-        instrumentAddDTO.setCardNumber(cardsBasic.getCardNumber());
+        instrumentAddDTO.setCardId(cardsBasic.getCardId());
         Instrument instrumentDto = instrumentService.createNewInstrument(instrumentAddDTO)
                 .block();
 
@@ -269,7 +269,7 @@ class InstrumentServiceImplTest {
         String deleteAccountNumber = UUID.randomUUID().toString().replace("-","");
 
         InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true,deleteAccountNumber);
-        instrumentAddDTO.setCardNumber(cardsBasic.getCardNumber());
+        instrumentAddDTO.setCardId(cardsBasic.getCardId());
         Instrument instrumentDto = instrumentService.createNewInstrument(instrumentAddDTO)
                 .block();
 
@@ -289,7 +289,7 @@ class InstrumentServiceImplTest {
         String deleteAccountNumber = UUID.randomUUID().toString().replace("-","");
 
         InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true,deleteAccountNumber);
-        instrumentAddDTO.setCardNumber(cardsBasic.getCardNumber());
+        instrumentAddDTO.setCardId(cardsBasic.getCardId());
         Instrument instrumentDto = instrumentService.createNewInstrument(instrumentAddDTO)
                 .block();
 
@@ -391,7 +391,7 @@ class InstrumentServiceImplTest {
         assertAll(
                 () -> assertEquals(instrumentAddDTO.getInstrumentNumber(), instrument.getInstrumentNumber()),
 //                () -> assertEquals(instrumentAddDTO.getAccountNumber(), instrument.getAccountNumber()),
-                () -> assertEquals(instrumentAddDTO.getCardNumber(), instrument.getCardNumber()),
+                () -> assertEquals(instrumentAddDTO.getCardId(), instrument.getCardNumber()),
                 () -> assertEquals(Util.getBlockType(instrumentAddDTO.getBlockType()), instrument.getBlockType()),
                 () -> assertEquals(instrumentAddDTO.getExpiryDate(), instrument.getExpiryDate().format(DateTimeFormatter.BASIC_ISO_DATE)),
                 () -> assertEquals(instrumentAddDTO.getOrg(), instrument.getOrg()),
@@ -413,7 +413,7 @@ class InstrumentServiceImplTest {
         assertAll(
                 () -> assertEquals(instrumentAddDTO.getInstrumentNumber(), instrument.getInstrumentNumber()),
 //                () -> assertEquals(instrumentAddDTO.getAccountNumber(), instrument.getAccountNumber()),
-                () -> assertEquals(instrumentAddDTO.getCardNumber(), instrument.getCardNumber()),
+                () -> assertEquals(instrumentAddDTO.getCardId(), instrument.getCardNumber()),
                 () -> assertNull(instrument.getCorporateNumber()),
                 () -> assertNull(instrument.getBlockType()),
                 () -> assertNull(instrument.getExpiryDate()),
@@ -441,7 +441,7 @@ class InstrumentServiceImplTest {
         assertAll(
                 () -> assertEquals(instrumentUpdateDTO.getInstrumentNumber(), instrument1.getInstrumentNumber()),
 //                () -> assertEquals(instrumentUpdateDTO.getAccountNumber(), instrument1.getAccountNumber()),
-                () -> assertEquals(instrumentUpdateDTO.getCardNumber(), instrument1.getCardNumber()),
+                () -> assertEquals(instrumentUpdateDTO.getCardId(), instrument1.getCardNumber()),
                 () -> assertEquals(Util.getBlockType(instrumentUpdateDTO.getBlockType()), instrument1.getBlockType()),
                 () -> assertEquals(instrumentUpdateDTO.getExpiryDate(), instrument1.getExpiryDate().format(DateTimeFormatter.BASIC_ISO_DATE)),
                 () -> assertEquals(instrumentUpdateDTO.getOrg(), instrument1.getOrg()),
@@ -468,7 +468,7 @@ class InstrumentServiceImplTest {
         assertAll(
                 () -> assertEquals(instrument.getInstrumentNumber(), instrument1.getInstrumentNumber()),
 //                () -> assertEquals(instrumentUpdateDTO.getAccountNumber(), instrument1.getAccountNumber()),
-                () -> assertEquals(instrumentUpdateDTO.getCardNumber(), instrument1.getCardNumber()),
+                () -> assertEquals(instrumentUpdateDTO.getCardId(), instrument1.getCardNumber()),
                 () -> assertEquals(instrument.getCustomerNumber(), instrument1.getCustomerNumber()),
                 () -> assertEquals(instrument.getCorporateNumber(), instrument1.getCorporateNumber()),
                 () -> assertEquals(instrument.getBlockType(), instrument1.getBlockType()),
@@ -553,15 +553,15 @@ class InstrumentServiceImplTest {
         Arrays.sort(accountNumberArray);
 
         String[] accountNumberArray1 = instrumentDto.getAccountDefDTOSet().stream()
-                .map(accountDefDTO -> accountDefDTO.getAccountNumber())
+                .map(accountDefDTO -> accountDefDTO.getAccountId())
                 .toArray(String[]::new);
 
         Arrays.sort(accountNumberArray1);
         assertAll(
                 () -> assertEquals(instrument.getInstrumentNumber(), instrumentDto.getInstrumentNumber()),
 //                () -> assertEquals(instrument.getAccountNumber(), instrumentDto.getAccountNumber()),
-                () -> assertEquals(instrument.getCardNumber(), instrumentDto.getCardNumber()),
-                () -> assertEquals(instrument.getCustomerNumber(), instrumentDto.getCustomerNumber()),
+                () -> assertEquals(instrument.getCardNumber(), instrumentDto.getCardId()),
+                () -> assertEquals(instrument.getCustomerNumber(), instrumentDto.getCustomerId()),
                 () -> assertEquals(instrument.getCorporateNumber(), instrumentDto.getCorporateNumber()),
                 () -> assertEquals(instrument.getBlockType(), Util.getBlockType(instrumentDto.getBlockType())),
                 () -> assertEquals(instrument.getExpiryDate().format(DateTimeFormatter.BASIC_ISO_DATE), instrumentDto.getExpiryDate()),
@@ -592,15 +592,15 @@ class InstrumentServiceImplTest {
         Arrays.sort(accountDefs);
 
         String[] accountDefs1 = instrumentDto.getAccountDefDTOSet().stream()
-                .map(accountDefDTO -> accountDefDTO.getAccountNumber())
+                .map(accountDefDTO -> accountDefDTO.getAccountId())
                 .toArray(String[]::new);
 
         Arrays.sort(accountDefs1);
         assertAll(
                 () -> assertEquals(instrument.getInstrumentNumber(), instrumentDto.getInstrumentNumber()),
 //                () -> assertEquals(instrument.getAccountNumber(), instrumentDto.getAccountNumber()),
-                () -> assertEquals(instrument.getCardNumber(), instrumentDto.getCardNumber()),
-                () -> assertEquals(instrument.getCustomerNumber(), instrumentDto.getCustomerNumber()),
+                () -> assertEquals(instrument.getCardNumber(), instrumentDto.getCardId()),
+                () -> assertEquals(instrument.getCustomerNumber(), instrumentDto.getCustomerId()),
                 () -> assertNull(instrumentDto.getCorporateNumber()),
                 () -> assertNull(instrumentDto.getBlockType()),
                 () -> assertNull(instrumentDto.getExpiryDate()),
@@ -730,7 +730,7 @@ class InstrumentServiceImplTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
 
@@ -738,7 +738,7 @@ class InstrumentServiceImplTest {
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(deleteAccountNumber)
+                .accountId(deleteAccountNumber)
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSet = new HashSet<>();
@@ -753,7 +753,7 @@ class InstrumentServiceImplTest {
 
         InstrumentAddDTO.InstrumentAddDTOBuilder instrumentBuilder = InstrumentAddDTO.builder()
                 .instrumentNumber(instrumentNumber)
-                .cardNumber(Util.generateNextCardNumber(instrumentNumber))
+                .cardId(Util.generateNextCardNumber(instrumentNumber))
 //                .accountNumber(UUID.randomUUID().toString().replace("-", ""))
                 .active(true)
                 .instrumentType("0")
@@ -777,24 +777,24 @@ class InstrumentServiceImplTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO2 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CREDIT))
                 .billingCurrencyCode("840")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
         AccountDefDTO accountDefDTO3 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CURRENT))
                 .billingCurrencyCode("484")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(deleteAccountNumber)
+                .accountId(deleteAccountNumber)
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSetAdd = new HashSet<>();
@@ -818,7 +818,7 @@ class InstrumentServiceImplTest {
         if (allFields) {
 
             return builder
-                    .cardNumber(cardNumber)
+                    .cardId(cardNumber)
                     .active(false)
 //                    .accountNumber(UUID.randomUUID().toString().replace("-", ""))
                     .blockType(Util.getBlockType(BlockType.BLOCK_SUSPECTED_FRAUD))
@@ -847,24 +847,24 @@ class InstrumentServiceImplTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO2 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CREDIT))
                 .billingCurrencyCode("840")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
         AccountDefDTO accountDefDTO3 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CURRENT))
                 .billingCurrencyCode("484")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(deleteAccountNumber)
+                .accountId(deleteAccountNumber)
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSetAdd = new HashSet<>();
@@ -880,7 +880,7 @@ class InstrumentServiceImplTest {
 
         switch (i) {
             case 1: {
-                builder.cardNumber(cardNumber);
+                builder.cardId(cardNumber);
                 break;
             }
             case 2: {
@@ -929,14 +929,14 @@ class InstrumentServiceImplTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
 
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(deleteAccountNumber)
+                .accountId(deleteAccountNumber)
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSet = new HashSet<>();
@@ -990,7 +990,7 @@ class InstrumentServiceImplTest {
 
 
         return CardBasicAddDTO.builder()
-                .cardNumber(Util.generateCardNumberFromStarter("491652996363189"))
+                .cardId(Util.generateCardNumberFromStarter("491652996363189"))
                 .cardholderType(Util.getCardHolderType(CardHolderType.PRIMARY))
                 .blockType(Util.getBlockType(BlockType.APPROVE))
                 .cardStatus(Util.getCardStatus(CardStatus.ACTIVE))

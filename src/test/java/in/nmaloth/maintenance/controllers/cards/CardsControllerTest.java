@@ -1,10 +1,7 @@
 package in.nmaloth.maintenance.controllers.cards;
 
 import in.nmaloth.entity.BlockType;
-import in.nmaloth.entity.account.AccountBasic;
-import in.nmaloth.entity.account.AccountDef;
-import in.nmaloth.entity.account.AccountType;
-import in.nmaloth.entity.account.BalanceTypes;
+import in.nmaloth.entity.account.*;
 import in.nmaloth.entity.card.*;
 import in.nmaloth.entity.customer.AddressType;
 import in.nmaloth.entity.customer.CustomerDef;
@@ -21,7 +18,6 @@ import in.nmaloth.maintenance.model.dto.card.*;
 import in.nmaloth.maintenance.repository.account.AccountBasicRepository;
 import in.nmaloth.maintenance.repository.card.CardAccumulatedValuesRepository;
 import in.nmaloth.maintenance.repository.card.CardsBasicRepository;
-import in.nmaloth.maintenance.repository.card.PlasticRepository;
 import in.nmaloth.maintenance.repository.customer.CustomerRepository;
 import in.nmaloth.maintenance.repository.product.ProductCardGenRepository;
 import in.nmaloth.maintenance.repository.product.ProductDefRepository;
@@ -58,8 +54,6 @@ class CardsControllerTest {
     @Autowired
     private ProductTable productTable;
 
-    @Autowired
-    private PlasticRepository plasticRepository;
 
     @Autowired
     private CardsBasicRepository cardsBasicRepository;
@@ -101,8 +95,6 @@ class CardsControllerTest {
         cardsBasicRepository.findAll()
                 .forEach(cardsBasic -> cardsBasicRepository.delete(cardsBasic));
 
-        plasticRepository.findAll()
-                .forEach(plastic -> plasticRepository.delete(plastic));
 
         setupProductTable();
 
@@ -116,7 +108,7 @@ class CardsControllerTest {
     @Test
     void createNewCardsRecord() {
 
-        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerNumber());
+        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerId());
 
         webTestClient.post()
                 .uri(EndPoints.CARDS)
@@ -126,7 +118,7 @@ class CardsControllerTest {
                 .expectBody(CardsCombinedDTO.class)
                 .value(cardsCombinedDTO -> {
 
-                    String cardNumber = cardsCombinedDTO.getCardBasicDTO().getCardNumber();
+                    String cardNumber = cardsCombinedDTO.getCardBasicDTO().getCardId();
                     Optional<CardsBasic> cardsBasicOptional = cardsBasicRepository.findById(cardNumber);
                     Optional<CardAccumulatedValues> cardAccumulatedValuesOptional = cardAccumulatedValuesRepository.findById(cardNumber);
 
@@ -145,8 +137,8 @@ class CardsControllerTest {
     @Test
     void createNewCardsRecord1() {
 
-        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerNumber());
-        cardBasicAddDTO.setCardNumber(null);
+        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerId());
+        cardBasicAddDTO.setCardId(null);
 
         webTestClient.post()
                 .uri(EndPoints.CARDS)
@@ -156,7 +148,7 @@ class CardsControllerTest {
                 .expectBody(CardsCombinedDTO.class)
                 .value(cardsCombinedDTO -> {
 
-                    String cardNumber = cardsCombinedDTO.getCardBasicDTO().getCardNumber();
+                    String cardNumber = cardsCombinedDTO.getCardBasicDTO().getCardId();
 
                     Optional<CardsBasic> cardsBasicOptional = cardsBasicRepository.findById(cardNumber);
                     Optional<CardAccumulatedValues> cardAccumulatedValuesOptional = cardAccumulatedValuesRepository.findById(cardNumber);
@@ -178,8 +170,8 @@ class CardsControllerTest {
     @Test
     void createNewCardsRecord2() {
 
-        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerNumber());
-        cardBasicAddDTO.setCardNumber(null);
+        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerId());
+        cardBasicAddDTO.setCardId(null);
 
         AccountDef[] accountDefArray = accountDefSet.toArray(new AccountDef[0]);
 
@@ -200,8 +192,8 @@ class CardsControllerTest {
     @Test
     void createNewCardsRecord3() {
 
-        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerNumber());
-        cardBasicAddDTO.setCardNumber(null);
+        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerId());
+        cardBasicAddDTO.setCardId(null);
 
         AccountDef[] accountDefArray = accountDefSet.toArray(new AccountDef[0]);
 
@@ -221,8 +213,8 @@ class CardsControllerTest {
     @Test
     void createNewCardsRecord4() {
 
-        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerNumber());
-        cardBasicAddDTO.setCardNumber(null);
+        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerId());
+        cardBasicAddDTO.setCardId(null);
 
         AccountDef[] accountDefArray = accountDefSet.toArray(new AccountDef[0]);
 
@@ -242,8 +234,8 @@ class CardsControllerTest {
     @Test
     void createNewCardsRecord5() {
 
-        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerNumber());
-        cardBasicAddDTO.setCardNumber(null);
+        CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO(accountDefSet,customerDef.getCustomerId());
+        cardBasicAddDTO.setCardId(null);
 
 
         customerRepository.deleteById(cardBasicAddDTO.getCustomerNumber());
@@ -271,7 +263,7 @@ class CardsControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        String url = EndPoints.CARDS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String url = EndPoints.CARDS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardId());
 
         webTestClient.get()
                 .uri(url)
@@ -279,7 +271,7 @@ class CardsControllerTest {
                 .expectStatus().isOk()
                 .expectBody(CardBasicDTO.class)
                 .value(cardBasicDTO -> {
-                    assertEquals(cardsBasic.getCardNumber(),cardBasicDTO.getCardNumber());
+                    assertEquals(cardsBasic.getCardId(),cardBasicDTO.getCardId());
                 });
 
     }
@@ -289,7 +281,7 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        String url = EndPoints.CARDS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String url = EndPoints.CARDS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardId());
 
         webTestClient.get()
                 .uri(url)
@@ -307,10 +299,9 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        String url = EndPoints.CARDS_LIMITS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String url = EndPoints.CARDS_LIMITS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardId());
 
-        CardAccumulatedValues cardAccumulatedValues = cardAccumValuesService.initializeAccumValues(cardsBasic.getCardNumber(),
-                new HashSet<>(),cardsBasic.getOrg(),cardsBasic.getProduct());
+        CardAccumulatedValues cardAccumulatedValues = createCardAccumValues(cardsBasic.getCardId());
 
         cardAccumulatedValuesRepository.save(cardAccumulatedValues);
 
@@ -321,7 +312,7 @@ class CardsControllerTest {
                 .expectBody(CardAccumulatedValues.class)
                 .value(cardAccumulatedValues1 -> {
 
-                    assertNotNull(cardAccumulatedValues1.getCardNumber());
+                    assertNotNull(cardAccumulatedValues1.getCardId());
                 });
 
 
@@ -333,10 +324,9 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        String url = EndPoints.CARDS_LIMITS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String url = EndPoints.CARDS_LIMITS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardId());
 
-        CardAccumulatedValues cardAccumulatedValues = cardAccumValuesService.initializeAccumValues(cardsBasic.getCardNumber(),
-                new HashSet<>(),cardsBasic.getOrg(),cardsBasic.getProduct());
+        CardAccumulatedValues cardAccumulatedValues = createCardAccumValues(cardsBasic.getCardId());
 
 
         webTestClient.get()
@@ -360,7 +350,7 @@ class CardsControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        String url = EndPoints.CARDS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String url = EndPoints.CARDS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardId());
 
         webTestClient.delete()
                 .uri(url)
@@ -369,7 +359,7 @@ class CardsControllerTest {
                 .expectBody(CardBasicDTO.class)
                 .value(cardBasicDTO -> {
 
-                    assertTrue(cardsBasicRepository.findById(cardBasicDTO.getCardNumber()).isEmpty());
+                    assertTrue(cardsBasicRepository.findById(cardBasicDTO.getCardId()).isEmpty());
                 });
 
     }
@@ -379,7 +369,7 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        String url = EndPoints.CARDS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String url = EndPoints.CARDS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardId());
 
         webTestClient.delete()
                 .uri(url)
@@ -398,10 +388,9 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        String url = EndPoints.CARDS_LIMITS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String url = EndPoints.CARDS_LIMITS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardId());
 
-        CardAccumulatedValues cardAccumulatedValues = cardAccumValuesService.initializeAccumValues(cardsBasic.getCardNumber(),
-                new HashSet<>(),cardsBasic.getOrg(),cardsBasic.getProduct());
+        CardAccumulatedValues cardAccumulatedValues = createCardAccumValues(cardsBasic.getCardId());
 
         cardAccumulatedValuesRepository.save(cardAccumulatedValues);
 
@@ -412,7 +401,7 @@ class CardsControllerTest {
                 .expectBody(CardAccumulatedValues.class)
                 .value(cardAccumulatedValues1 -> {
 
-                    assertTrue(cardAccumulatedValuesRepository.findById(cardAccumulatedValues.getCardNumber()).isEmpty());
+                    assertTrue(cardAccumulatedValuesRepository.findById(cardAccumulatedValues.getCardId()).isEmpty());
                 });
 
     }
@@ -422,10 +411,9 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        String url = EndPoints.CARDS_LIMITS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String url = EndPoints.CARDS_LIMITS_CARD_NBR.replace("{cardNumber}",cardsBasic.getCardId());
 
-        CardAccumulatedValues cardAccumulatedValues = cardAccumValuesService.initializeAccumValues(cardsBasic.getCardNumber(),
-                new HashSet<>(),cardsBasic.getOrg(),cardsBasic.getProduct());
+        CardAccumulatedValues cardAccumulatedValues = createCardAccumValues(cardsBasic.getCardId());
 
 //        cardAccumulatedValuesRepository.save(cardAccumulatedValues);
 
@@ -445,27 +433,18 @@ class CardsControllerTest {
     void updateCardsBasic() {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
-        cardsBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        cardsBasic.setCustomerNumber(customerDef.getCustomerId());
 
         cardsBasicRepository.save(cardsBasic);
 
-        Set<PeriodicLimitSet> periodicLimitSet = cardsBasic.getPeriodicTypePeriodicCardLimitMap()
-                .entrySet()
-                .stream()
-                .map(periodicTypeMapEntry -> PeriodicLimitSet.builder()
-                        .periodicType(periodicTypeMapEntry.getKey())
-                        .limitTypeSet(createLimitypeSet(periodicTypeMapEntry.getValue()))
-                        .build()
-                )
-                .collect(Collectors.toSet());
 
-        CardAccumulatedValues cardAccumulatedValues = cardAccumValuesService.initializeAccumValues(cardsBasic.getCardNumber(),periodicLimitSet,cardsBasic.getOrg(),cardsBasic.getProduct());
+        CardAccumulatedValues cardAccumulatedValues = createCardAccumValues(cardsBasic.getCardId());
         cardAccumulatedValuesRepository.save(cardAccumulatedValues);
 
         AccountDef[] accountDefArray = accountDefSet.toArray(new AccountDef[0]);
 
         CardBasicUpdateDTO cardBasicUpdateDTO = createCardBasic(true,null, accountDefArray[1].getAccountNumber());
-        cardBasicUpdateDTO.setCardNumber(cardsBasic.getCardNumber());
+        cardBasicUpdateDTO.setCardId(cardsBasic.getCardId());
         webTestClient
                 .put()
                 .uri(EndPoints.CARDS)
@@ -475,7 +454,7 @@ class CardsControllerTest {
                 .expectBody(CardsCombinedDTO.class)
                 .value(cardsCombinedDTO -> {
 
-                    String cardNumber = cardsCombinedDTO.getCardBasicDTO().getCardNumber();
+                    String cardNumber = cardsCombinedDTO.getCardBasicDTO().getCardId();
 
                     Optional<CardsBasic> cardsBasicOptional = cardsBasicRepository.findById(cardNumber);
                     Optional<CardAccumulatedValues> cardAccumulatedValuesOptional = cardAccumulatedValuesRepository.findById(cardNumber);
@@ -495,27 +474,19 @@ class CardsControllerTest {
     void updateCardsBasic1() {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
-        cardsBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        cardsBasic.setCustomerNumber(customerDef.getCustomerId());
 
 //        cardsBasicRepository.save(cardsBasic);
 
-        Set<PeriodicLimitSet> periodicLimitSet = cardsBasic.getPeriodicTypePeriodicCardLimitMap()
-                .entrySet()
-                .stream()
-                .map(periodicTypeMapEntry -> PeriodicLimitSet.builder()
-                        .periodicType(periodicTypeMapEntry.getKey())
-                        .limitTypeSet(createLimitypeSet(periodicTypeMapEntry.getValue()))
-                        .build()
-                )
-                .collect(Collectors.toSet());
 
-        CardAccumulatedValues cardAccumulatedValues = cardAccumValuesService.initializeAccumValues(cardsBasic.getCardNumber(),periodicLimitSet,cardsBasic.getOrg(),cardsBasic.getProduct());
+
+        CardAccumulatedValues cardAccumulatedValues = createCardAccumValues(cardsBasic.getCardId());
 //        cardAccumulatedValuesRepository.save(cardAccumulatedValues);
 
         AccountDef[] accountDefArray = accountDefSet.toArray(new AccountDef[0]);
 
         CardBasicUpdateDTO cardBasicUpdateDTO = createCardBasic(true,null, accountDefArray[1].getAccountNumber());
-        cardBasicUpdateDTO.setCardNumber(cardsBasic.getCardNumber());
+        cardBasicUpdateDTO.setCardId(cardsBasic.getCardId());
         webTestClient
                 .put()
                 .uri(EndPoints.CARDS)
@@ -534,7 +505,7 @@ class CardsControllerTest {
     void createNewPlastics(){
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
-        cardsBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        cardsBasic.setCustomerNumber(customerDef.getCustomerId());
         cardsBasicRepository.save(cardsBasic);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
@@ -545,14 +516,17 @@ class CardsControllerTest {
                 .uri(EndPoints.CARDS_NEW_PLASTIC)
                 .body(Mono.just(plasticUpdateDto),PlasticUpdateDto.class)
                 .exchange().expectStatus().isOk()
-                .expectBody(PlasticsDTO.class)
-                .value(plasticsDTO -> {
+                .expectBody(CardBasicDTO.class)
+                .value(cardBasicDTO -> {
 
-                    Plastic plastic = plasticRepository.findById(new PlasticKey(plasticsDTO.getId(),cardsBasic.getCardNumber())).get();
+                    CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
+
+                    Plastic plastic = cardsBasic1.getPlasticList().get(0);
 
                     ProductDef productDef = productDefRepository.findById(new ProductId(cardsBasic.getOrg(),cardsBasic.getProduct())).get();
 
                     assertAll(
+                            ()-> assertEquals(1,cardBasicDTO.getPlasticsDTOList().size()),
                             ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                             ()-> assertEquals(CardAction.NEW_CARD,plastic.getPendingCardAction()),
                             ()-> assertEquals(LocalDate.now().plusMonths(productDef.getCardsValidityMonthNew()).with(TemporalAdjusters.lastDayOfMonth()),
@@ -573,7 +547,7 @@ class CardsControllerTest {
     void createNewPlastics1(){
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
-        cardsBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        cardsBasic.setCustomerNumber(customerDef.getCustomerId());
 //        cardsBasicRepository.save(cardsBasic);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
@@ -595,7 +569,7 @@ class CardsControllerTest {
     void createNewPlasticsEmergencyRepl(){
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
-        cardsBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        cardsBasic.setCustomerNumber(customerDef.getCustomerId());
         cardsBasicRepository.save(cardsBasic);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
@@ -607,14 +581,16 @@ class CardsControllerTest {
                 .body(Mono.just(plasticUpdateDto),PlasticUpdateDto.class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(PlasticsDTO.class)
-                .value(plasticsDTO -> {
+                .expectBody(CardBasicDTO.class)
+                .value(cardBasicDTO -> {
 
-                    Plastic plastic = plasticRepository.findById(new PlasticKey(plasticsDTO.getId(),cardsBasic.getCardNumber())).get();
+                    CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
 
+                    Plastic plastic = cardsBasic1.getPlasticList().get(0);
                     ProductDef productDef = productDefRepository.findById(new ProductId(cardsBasic.getOrg(),cardsBasic.getProduct())).get();
 
                     assertAll(
+                            ()-> assertEquals(1,cardBasicDTO.getPlasticsDTOList().size()),
                             ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                             ()-> assertEquals(CardAction.EMERGENCY_REPLACEMENT_CARD,plastic.getPendingCardAction()),
                             ()-> assertEquals(LocalDate.now().plusDays(plasticUpdateDto.getEmergencyReplCardsExpiryDays()).with(TemporalAdjusters.lastDayOfMonth()),
@@ -636,7 +612,8 @@ class CardsControllerTest {
     void createNewPlasticsEmergencyRepl1(){
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
-        cardsBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        cardsBasic.setCustomerNumber(customerDef.getCustomerId());
+
         cardsBasicRepository.save(cardsBasic);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
@@ -660,42 +637,49 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        cardsBasicRepository.save(cardsBasic);
-
         ProductDef productDef = productDefRepository.findById(new ProductId(cardsBasic.getOrg(),cardsBasic.getProduct())).get();
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
 
-        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
-        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
+        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
         plastic2.setExpiryDate(LocalDate.of(2021,4,30));
-        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
 
         List<Plastic> plasticList = new ArrayList<>();
         plasticList.add(plastic1);
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        plasticRepository.saveAll(plasticList);
+        cardsBasic.setPlasticList(plasticList);
+        cardsBasicRepository.save(cardsBasic);
 
-        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,false,null,plastic2.getPlasticKey().getId(),null);
+        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,false,null,plastic2.getPlasticId(),null);
 
         webTestClient.post()
                 .uri(EndPoints.CARDS_NEW_PLASTIC)
                 .body(Mono.just(plasticUpdateDto),PlasticUpdateDto.class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(PlasticsDTO.class)
-                .value(plasticsDTO -> {
+                .expectBody(CardBasicDTO.class)
+                .value(cardBasicDTO -> {
 
-                    Plastic plastic = plasticRepository.findById(new PlasticKey(plasticsDTO.getId(),plastic1.getCardNumber())).get();
+                    CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
 
-                    List<Plastic> plasticList1 = new ArrayList<>();
-                    plasticRepository.findAllByCardNumber(cardsBasic.getCardNumber()).forEach(plasticList1::add);
+                    String plasticId = cardBasicDTO.getPlasticsDTOList().stream()
+                            .filter(plasticsDTO -> !plasticsDTO.getPlasticId().equals(plastic1.getPlasticId()))
+                            .filter(plasticsDTO -> !plasticsDTO.getPlasticId().equals(plastic2.getPlasticId()))
+                            .filter(plasticsDTO -> !plasticsDTO.getPlasticId().equals(plastic3.getPlasticId()))
+                            .map(plasticsDTO -> plasticsDTO.getPlasticId())
+                            .findFirst()
+                            .get();
 
+
+
+                    Plastic plastic = findPlasticById(plasticId,cardsBasic1.getPlasticList());
 
                     assertAll(
-                            ()-> assertEquals(4,plasticList1.size()),
+                            ()-> assertEquals(4,cardsBasic1.getPlasticList().size()),
                             ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                             ()-> assertEquals(CardAction.REPLACEMENT_CARD,plastic.getPendingCardAction()),
                             ()-> assertEquals(LocalDate.now().plusMonths(productDef.getCardsValidityMonthReplace()).with(TemporalAdjusters.lastDayOfMonth()),
@@ -716,31 +700,38 @@ class CardsControllerTest {
     }
 
 
+    private Plastic findPlasticById(String plasticId,List<Plastic> plasticList){
+
+        return plasticList.stream()
+                .filter(plastic -> plastic.getPlasticId().equals(plasticId))
+                .findFirst()
+                .get();
+    }
+
     @Test
     void fetchPlasticInfo(){
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        cardsBasicRepository.save(cardsBasic);
-
         ProductDef productDef = productDefRepository.findById(new ProductId(cardsBasic.getOrg(),cardsBasic.getProduct())).get();
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
 
-        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
-        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
+        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
         plastic2.setExpiryDate(LocalDate.of(2021,4,30));
-        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
 
         List<Plastic> plasticList = new ArrayList<>();
         plasticList.add(plastic1);
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        plasticRepository.saveAll(plasticList);
+        cardsBasic.setPlasticList(plasticList);
+        cardsBasicRepository.save(cardsBasic);
 
-        String uri = EndPoints.CARDS_CARD_NBR_PLASTIC_ID.replace("{cardNumber}",cardsBasic.getCardNumber())
-                .replace("{plasticId}",plastic2.getPlasticKey().getId());
+        String uri = EndPoints.CARDS_CARD_NBR_PLASTIC_ID.replace("{cardNumber}",cardsBasic.getCardId())
+                .replace("{plasticId}",plastic2.getPlasticId());
 
 
         webTestClient.get()
@@ -756,12 +747,11 @@ class CardsControllerTest {
                             ()-> assertEquals(plastic2.getCardAction(),Util.getCardAction(plasticsDTO.getCardAction())),
                             ()-> assertEquals(plastic2.getCardActivated(),plasticsDTO.getCardActivated()),
                             ()-> assertEquals(plastic2.getCardActivatedDate(),plasticsDTO.getCardActivatedDate()),
-                            ()-> assertEquals(plastic2.getCardNumber(),plasticsDTO.getCardNumber()),
                             ()-> assertEquals(plastic2.getDateCardValidFrom(),plasticsDTO.getDateCardValidFrom()),
                             ()-> assertEquals(plastic2.getDatePlasticIssued(),plasticsDTO.getDatePlasticIssued()),
                             ()-> assertEquals(plastic2.getExpiryDate(),plasticsDTO.getExpiryDate()),
                             ()-> assertEquals(plastic2.getPendingCardAction(),Util.getCardAction(plasticsDTO.getPendingCardAction())),
-                            ()-> assertEquals(plastic2.getPlasticKey().getId(),plasticsDTO.getId())
+                            ()-> assertEquals(plastic2.getPlasticId(),plasticsDTO.getPlasticId())
                     );
 
                 });
@@ -773,26 +763,26 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        cardsBasicRepository.save(cardsBasic);
 
         ProductDef productDef = productDefRepository.findById(new ProductId(cardsBasic.getOrg(),cardsBasic.getProduct())).get();
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
 
-        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
-        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
+        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
         plastic2.setExpiryDate(LocalDate.of(2021,4,30));
-        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
 
         List<Plastic> plasticList = new ArrayList<>();
         plasticList.add(plastic1);
 //        plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        plasticRepository.saveAll(plasticList);
+        cardsBasic.setPlasticList(plasticList);
+        cardsBasicRepository.save(cardsBasic);
 
-        String uri = EndPoints.CARDS_CARD_NBR_PLASTIC_ID.replace("{cardNumber}",cardsBasic.getCardNumber())
-                .replace("{plasticId}",plastic2.getPlasticKey().getId());
+        String uri = EndPoints.CARDS_CARD_NBR_PLASTIC_ID.replace("{cardNumber}",cardsBasic.getCardId())
+                .replace("{plasticId}",plastic2.getPlasticId());
 
 
         webTestClient.get()
@@ -812,36 +802,41 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        cardsBasicRepository.save(cardsBasic);
 
         ProductDef productDef = productDefRepository.findById(new ProductId(cardsBasic.getOrg(),cardsBasic.getProduct())).get();
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
 
-        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
-        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
+        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
         plastic2.setExpiryDate(LocalDate.of(2021,4,30));
-        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
 
         List<Plastic> plasticList = new ArrayList<>();
         plasticList.add(plastic1);
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        plasticRepository.saveAll(plasticList);
+        cardsBasic.setPlasticList(plasticList);
+        cardsBasicRepository.save(cardsBasic);
 
-        String uri = EndPoints.CARDS_CARD_NBR_PLASTIC_ID.replace("{cardNumber}",cardsBasic.getCardNumber())
-                .replace("{plasticId}",plastic2.getPlasticKey().getId());
+        String uri = EndPoints.CARDS_CARD_NBR_PLASTIC_ID.replace("{cardNumber}",cardsBasic.getCardId())
+                .replace("{plasticId}",plastic2.getPlasticId());
 
 
         webTestClient.delete()
                 .uri(uri)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(PlasticsDTO.class)
-                .value(plasticsDTO -> {
+                .expectBody(CardBasicDTO.class)
+                .value(cardBasicDTO -> {
 
-                    Optional<Plastic> plasticOptional = plasticRepository.findById(plastic2.getPlasticKey());
+                    CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
+
+                    Optional<Plastic> plasticOptional = cardsBasic1.getPlasticList()
+                            .stream()
+                            .filter(plastic -> plastic.getPlasticId().equals(plastic2.getPlasticId()))
+                            .findFirst();
 
                     assertTrue(plasticOptional.isEmpty());
                 });
@@ -853,26 +848,25 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        cardsBasicRepository.save(cardsBasic);
-
         ProductDef productDef = productDefRepository.findById(new ProductId(cardsBasic.getOrg(),cardsBasic.getProduct())).get();
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
 
-        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
-        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
+        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
         plastic2.setExpiryDate(LocalDate.of(2021,4,30));
-        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
 
         List<Plastic> plasticList = new ArrayList<>();
         plasticList.add(plastic1);
 //        plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        plasticRepository.saveAll(plasticList);
+        cardsBasic.setPlasticList(plasticList);
+        cardsBasicRepository.save(cardsBasic);
 
-        String uri = EndPoints.CARDS_CARD_NBR_PLASTIC_ID.replace("{cardNumber}",cardsBasic.getCardNumber())
-                .replace("{plasticId}",plastic2.getPlasticKey().getId());
+        String uri = EndPoints.CARDS_CARD_NBR_PLASTIC_ID.replace("{cardNumber}",cardsBasic.getCardId())
+                .replace("{plasticId}",plastic2.getPlasticId());
 
 
         webTestClient.delete()
@@ -891,25 +885,24 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        cardsBasicRepository.save(cardsBasic);
-
         ProductDef productDef = productDefRepository.findById(new ProductId(cardsBasic.getOrg(),cardsBasic.getProduct())).get();
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
 
-        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
-        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
+        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
         plastic2.setExpiryDate(LocalDate.of(2021,4,30));
-        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
 
         List<Plastic> plasticList = new ArrayList<>();
         plasticList.add(plastic1);
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        plasticRepository.saveAll(plasticList);
+        cardsBasic.setPlasticList(plasticList);
+        cardsBasicRepository.save(cardsBasic);
 
-        String uri = EndPoints.CARDS_PLASTIC_CARD_NUMBER.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String uri = EndPoints.CARDS_PLASTIC_CARD_NUMBER.replace("{cardNumber}",cardsBasic.getCardId());
 
 
         webTestClient.get()
@@ -926,46 +919,41 @@ class CardsControllerTest {
 
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 
-        cardsBasicRepository.save(cardsBasic);
 
         ProductDef productDef = productDefRepository.findById(new ProductId(cardsBasic.getOrg(),cardsBasic.getProduct())).get();
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
 
-        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
-        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic1 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
+        Plastic plastic2 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
         plastic2.setExpiryDate(LocalDate.of(2021,4,30));
-        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardNumber());
+        Plastic plastic3 = createPlastic(CardAction.NEW_CARD,cardsBasic.getCardId());
 
         List<Plastic> plasticList = new ArrayList<>();
         plasticList.add(plastic1);
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        plasticRepository.saveAll(plasticList);
+        cardsBasic.setPlasticList(plasticList);
+        cardsBasicRepository.save(cardsBasic);
 
-        String uri = EndPoints.CARDS_PLASTIC_CARD_NUMBER.replace("{cardNumber}",cardsBasic.getCardNumber());
+        String uri = EndPoints.CARDS_PLASTIC_CARD_NUMBER.replace("{cardNumber}",cardsBasic.getCardId());
 
 
         webTestClient.delete()
                 .uri(uri)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(PlasticsDTO.class)
-                .hasSize(3)
-                .consumeWith(listEntityExchangeResult -> {
+                .expectBody(CardBasicDTO.class)
+                .consumeWith(cardBasicDTOEntityExchangeResult -> {
 
-                    List<PlasticsDTO> plasticDTOList = listEntityExchangeResult.getResponseBody();
+                    CardBasicDTO cardBasicDTO = cardBasicDTOEntityExchangeResult.getResponseBody();
 
-                    Optional<Plastic> plasticOptional1 = plasticRepository.findById(plastic1.getPlasticKey());
-                    Optional<Plastic> plasticOptional2 = plasticRepository.findById(plastic2.getPlasticKey());
-                    Optional<Plastic> plasticOptional3 = plasticRepository.findById(plastic3.getPlasticKey());
+                   CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
 
                     assertAll(
-                            ()-> assertEquals(3, plasticDTOList.size()),
-                            ()-> assertTrue(plasticOptional1.isEmpty()),
-                            ()-> assertTrue(plasticOptional2.isEmpty()),
-                            ()-> assertTrue(plasticOptional3.isEmpty())
+                            ()-> assertEquals(0, cardBasicDTO.getPlasticsDTOList().size()),
+                            ()-> assertEquals(0,cardsBasic1.getPlasticList().size())
 
                             );
 
@@ -983,12 +971,11 @@ class CardsControllerTest {
                 .activationWaiveDuration(Duration.ofDays(10))
                 .cardActivated(true)
                 .cardActivatedDate(LocalDateTime.now())
-                .cardNumber(cardNumber)
                 .dateCardValidFrom(LocalDate.of(2020,12,02))
                 .datePlasticIssued(LocalDateTime.now())
                 .expiryDate(LocalDate.of(2022,04,30))
                 .pendingCardAction(CardAction.NO_ACTION)
-                .plasticKey(new PlasticKey(UUID.randomUUID().toString().replace("-",""),cardNumber))
+                .plasticId(UUID.randomUUID().toString().replace("-",""))
                 .build()
                 ;
     }
@@ -1001,7 +988,7 @@ class CardsControllerTest {
         PlasticUpdateDto.PlasticUpdateDtoBuilder builder = PlasticUpdateDto.builder()
                 .dynamicCVV(true)
                 .cardAction(Util.getCardAction(cardAction))
-                .cardNumber(cardNumber);
+                .cardId(cardNumber);
 
         if(activation != null){
             builder
@@ -1025,14 +1012,10 @@ class CardsControllerTest {
                 ;
     }
 
+    private CardAccumulatedValues createCardAccumValues(String cardId){
 
-    private Set<LimitType> createLimitypeSet(Map<LimitType, PeriodicCardAmount> limitMap) {
-        return limitMap.keySet();
-    }
 
-    private CardsBasic createCardBasic(Set<AccountDef> accountDefSet){
-
-        Map<PeriodicType,Map<LimitType,PeriodicCardAmount>> periodicTypeMap = new HashMap<>();
+        Map<PeriodicType,Map<LimitType,PeriodicCardAmount>> periodicLimitMap = new HashMap<>();
 
         Map<LimitType,PeriodicCardAmount> cardLimitMap = new HashMap<>();
 
@@ -1059,22 +1042,66 @@ class CardsControllerTest {
         cardLimitMap.put(periodicCardAmount3.getLimitType(),periodicCardAmount3);
 
 
-        periodicTypeMap.put(PeriodicType.SINGLE,cardLimitMap);
-        periodicTypeMap.put(PeriodicType.DAILY,cardLimitMap);
-        periodicTypeMap.put(PeriodicType.SINGLE,cardLimitMap);
-        periodicTypeMap.put(PeriodicType.MONTHLY,cardLimitMap);
+        periodicLimitMap.put(PeriodicType.SINGLE,cardLimitMap);
+        periodicLimitMap.put(PeriodicType.DAILY,cardLimitMap);
+        periodicLimitMap.put(PeriodicType.MONTHLY,cardLimitMap);
+
+        Map<PeriodicType,Map<LimitType,PeriodicCardAmount>> periodicAmountMap = new HashMap<>();
+
+        Map<LimitType,PeriodicCardAmount> cardAmountMap = new HashMap<>();
+
+        PeriodicCardAmount periodicCardAccum1 = PeriodicCardAmount.builder()
+                .limitType(LimitType.NO_SPECIFIC)
+                .transactionNumber(0)
+                .transactionAmount(0L)
+                .build();
+
+        PeriodicCardAmount periodicCardAccum2  = PeriodicCardAmount.builder()
+                .limitType(LimitType.CASH)
+                .transactionNumber(0)
+                .transactionAmount(0L)
+                .build();
+
+        PeriodicCardAmount periodicCardAccum3 = PeriodicCardAmount.builder()
+                .limitType(LimitType.RETAIL)
+                .transactionNumber(0)
+                .transactionAmount(0L)
+                .build();
+
+        cardAmountMap.put(periodicCardAccum1.getLimitType(),periodicCardAccum1);
+        cardAmountMap.put(periodicCardAccum2.getLimitType(),periodicCardAccum2);
+        cardAmountMap.put(periodicCardAccum3.getLimitType(),periodicCardAccum3);
+
+
+        periodicAmountMap.put(PeriodicType.SINGLE,cardAmountMap);
+        periodicAmountMap.put(PeriodicType.DAILY,cardAmountMap);
+        periodicAmountMap.put(PeriodicType.MONTHLY,cardAmountMap);
+
+
+        return CardAccumulatedValues.builder()
+                .cardId(cardId)
+                .org(1)
+                .product(201)
+                .periodicTypePeriodicCardLimitMap(periodicLimitMap)
+                .periodicCardAccumulatedValueMap(periodicAmountMap)
+                .build();
+    }
+
+
+    private CardsBasic createCardBasic(Set<AccountDef> accountDefSet){
+
+
 
 
 
         return CardsBasic.builder()
-                .cardNumber(Util.generateCardNumberFromStarter("491652996363189"))
+                .cardId(Util.generateCardNumberFromStarter("491652996363189"))
                 .cardholderType(CardHolderType.PRIMARY)
                 .blockType(BlockType.APPROVE)
                 .cardStatus(CardStatus.ACTIVE)
                 .org(001)
                 .product(201)
                 .waiverDaysActivation(10)
-                .periodicTypePeriodicCardLimitMap(periodicTypeMap)
                 .accountDefSet(accountDefSet)
                 .customerNumber(UUID.randomUUID().toString().replace("-",""))
                 .build();
@@ -1086,7 +1113,7 @@ class CardsControllerTest {
         Set<AccountDefDTO> accountDefDTOSet = accountDefSet.stream()
                 .map(accountDef -> AccountDefDTO.builder()
                         .billingCurrencyCode(accountDef.getBillingCurrencyCode())
-                        .accountNumber(accountDef.getAccountNumber())
+                        .accountId(accountDef.getAccountNumber())
                         .accountType(Util.getAccountType(accountDef.getAccountType()))
                         .build()
                 )
@@ -1137,7 +1164,7 @@ class CardsControllerTest {
 
 
         return CardBasicAddDTO.builder()
-                .cardNumber(Util.generateCardNumberFromStarter("491652996363189"))
+                .cardId(Util.generateCardNumberFromStarter("491652996363189"))
                 .cardholderType(Util.getCardHolderType(CardHolderType.PRIMARY))
                 .blockType(Util.getBlockType(BlockType.APPROVE))
                 .cardStatus(Util.getCardStatus(CardStatus.ACTIVE))
@@ -1153,7 +1180,7 @@ class CardsControllerTest {
     private CardBasicUpdateDTO createCardBasic(boolean allFields, List<Integer> integerList, String deleteAccountNumber){
 
         CardBasicUpdateDTO.CardBasicUpdateDTOBuilder builder = CardBasicUpdateDTO.builder()
-                .cardNumber(Util.generateCardNumberFromStarter("491652996363189"));
+                .cardId(Util.generateCardNumberFromStarter("491652996363189"));
 
         List<PeriodicCardLimitDTO> periodicCardLimitDTOList = new ArrayList<>();
         List<PeriodicCardLimitDTO> periodicCardLimitDTOListDelete = new ArrayList<>();
@@ -1237,24 +1264,24 @@ class CardsControllerTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO2 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CREDIT))
                 .billingCurrencyCode("840")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
         AccountDefDTO accountDefDTO3 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CURRENT))
                 .billingCurrencyCode("484")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(deleteAccountNumber)
+                .accountId(deleteAccountNumber)
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSetAdd = new HashSet<>();
@@ -1298,24 +1325,24 @@ class CardsControllerTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO2 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CREDIT))
                 .billingCurrencyCode("840")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
         AccountDefDTO accountDefDTO3 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CURRENT))
                 .billingCurrencyCode("484")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(deleteAccountNumber)
+                .accountId(deleteAccountNumber)
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSetAdd = new HashSet<>();
@@ -1407,7 +1434,8 @@ class CardsControllerTest {
                 .build();
     }
 
-    private AccountBasic createAccountBasic(String customerNumber){
+
+    private AccountAccumValues createAccountAccum(String accountId){
 
         Map<BalanceTypes,Long> balanceTypesMap = new HashMap<>();
 
@@ -1420,14 +1448,43 @@ class CardsControllerTest {
         balanceTypesMap.put(BalanceTypes.INTERNATIONAL_INSTALLMENT,10000L);
 
 
+        AccountBalances accountBalance = AccountBalances.builder()
+                .memoCr(0L)
+                .memoDb(0L)
+                .postedBalance(0L)
+                .build();
+
+        Map<BalanceTypes, AccountBalances> accountBalancesMap = new HashMap<>();
+
+        accountBalancesMap.put(BalanceTypes.CURRENT_BALANCE,accountBalance);
+        accountBalancesMap.put(BalanceTypes.CASH_BALANCE,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INTERNATIONAL_CASH,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INTERNATIONAL,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INSTALLMENT_BALANCE,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INSTALLMENT_CASH,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INTERNATIONAL_INSTALLMENT,accountBalance);
+
+
+
+        return AccountAccumValues.builder()
+                .org(1)
+                .product(201)
+                .accountId(accountId)
+                .limitsMap(balanceTypesMap)
+                .balancesMap(accountBalancesMap)
+                .build();
+
+    }
+
+    private AccountBasic createAccountBasic(String customerNumber){
+
         return AccountBasic.builder()
                 .org(001)
                 .product(201)
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .blockType(BlockType.BLOCK_DECLINE)
                 .dateBlockApplied(LocalDateTime.now())
                 .billingCurrencyCode("840")
-                .limitsMap(balanceTypesMap)
                 .datePreviousBLockType(LocalDateTime.of(2020,12,23,11,24,30))
                 .previousBlockType(BlockType.BLOCK_SUSPECTED_FRAUD)
                 .accountType(AccountType.CREDIT)
@@ -1447,7 +1504,7 @@ class CardsControllerTest {
 
 
         CustomerDef.CustomerDefBuilder builder = CustomerDef.builder()
-                .customerNumber(UUID.randomUUID().toString().replace("-",""))
+                .customerId(UUID.randomUUID().toString().replace("-",""))
                 .customerType(CustomerType.OWNER)
                 .addressType(AddressType.PRIMARY)
                 .customerName("Test 1")
@@ -1528,15 +1585,15 @@ class CardsControllerTest {
         accountBasicRepository.findAll()
                 .forEach(accountBasic -> accountBasicRepository.delete(accountBasic));
 
-        AccountBasic accountBasic = createAccountBasic(customerDef.getCustomerNumber());
+        AccountBasic accountBasic = createAccountBasic(customerDef.getCustomerId());
         accountBasic.setAccountType(AccountType.UNIVERSAL);
         accountBasicRepository.save(accountBasic);
 
-        accountBasic = createAccountBasic(customerDef.getCustomerNumber());
+        accountBasic = createAccountBasic(customerDef.getCustomerId());
         accountBasic.setAccountType(AccountType.CREDIT);
         accountBasicRepository.save(accountBasic);
 
-        accountBasic = createAccountBasic(customerDef.getCustomerNumber());
+        accountBasic = createAccountBasic(customerDef.getCustomerId());
         accountBasic.setAccountType(AccountType.SAVINGS);
         this.accountBasic = accountBasicRepository.save(accountBasic);
 
@@ -1544,7 +1601,7 @@ class CardsControllerTest {
 
         accountDefSet = StreamSupport.stream(accountBasicRepository.findAll().spliterator(),false)
                 .map(accountBasic1 -> AccountDef.builder()
-                        .accountNumber(accountBasic1.getAccountNumber())
+                        .accountNumber(accountBasic1.getAccountId())
                         .billingCurrencyCode(accountBasic1.getBillingCurrencyCode())
                         .accountType(accountBasic1.getAccountType())
                         .build()

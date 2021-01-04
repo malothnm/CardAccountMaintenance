@@ -19,7 +19,7 @@ import java.util.Set;
 
 public class CardBasicDTO {
 
-    private String cardNumber;
+    private String cardId;
     private Integer product;
     private Integer org;
     private String cardStatus;
@@ -38,8 +38,8 @@ public class CardBasicDTO {
     private String corporateNumber;
 
     private Set<AccountDefDTO> accountDefDTOSet;
+    private List<PlasticsDTO> plasticsDTOList;
 
-    private List<PeriodicCardLimitDTO> periodicCardLimitDTOList;
 
 
 

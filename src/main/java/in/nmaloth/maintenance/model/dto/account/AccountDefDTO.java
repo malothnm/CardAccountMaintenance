@@ -15,7 +15,7 @@ public class AccountDefDTO {
 
 
     @NotNull
-    private String accountNumber;
+    private String accountId;
 
     @NotNull
     @Pattern(regexp = "S|CU|L|CR|U|P")

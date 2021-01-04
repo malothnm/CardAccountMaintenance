@@ -12,8 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 public class PlasticsDTO {
 
-    private String id;
-    private String cardNumber;
+    private String plasticId;
     private LocalDate expiryDate;
     private Boolean cardActivated;
     private LocalDateTime cardActivatedDate;

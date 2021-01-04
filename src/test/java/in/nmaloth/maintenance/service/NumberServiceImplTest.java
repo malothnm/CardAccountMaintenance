@@ -39,7 +39,7 @@ class NumberServiceImplTest {
 
     @Test
     void generateNewCustomerNumber() {
-        StepVerifier.create(numberService.generateNewCustomerNumber())
+        StepVerifier.create(numberService.generateNewCustomerId())
             .expectNextCount(1)
             .verifyComplete()
         ;
@@ -48,7 +48,7 @@ class NumberServiceImplTest {
     @Test
     void generateNewAccountNumber() {
 
-        StepVerifier.create(numberService.generateNewAccountNumber())
+        StepVerifier.create(numberService.generateNewAccountId())
                 .expectNextCount(1)
                 .verifyComplete()
         ;
@@ -58,78 +58,14 @@ class NumberServiceImplTest {
     void generateNewCardNumber() {
 
 
-        ProductCardGenDef productCardGenDef = createProductCardGenDef();
-        productCardGenRepository.save(productCardGenDef);
-
-        String lastCardNumber = productCardGenDef.getLastGeneratedCardNumber();
-        String nextCardNumber = Util.generateNextCardNumber(productCardGenDef.getLastGeneratedCardNumber(),1);
-        Mono<String> cardNumberMono = numberService
-                .generateNewCardNumber(productCardGenDef.getProductId().getOrg(),productCardGenDef.getProductId().getProduct());
-
-        StepVerifier
-                .create(cardNumberMono)
-                .consumeNextWith(s -> {
-
-                    ProductCardGenDef productCardGenDef1 = productCardGenRepository.findById(productCardGenDef.getProductId()).get();
-
-                    assertAll(
-                            ()-> assertEquals(nextCardNumber,s),
-                            ()-> assertEquals(nextCardNumber,productCardGenDef1.getLastGeneratedCardNumber())
-
-                    );
-                })
+        StepVerifier.create(numberService.generateNewAccountId())
+                .expectNextCount(1)
                 .verifyComplete();
 
     }
 
-    @Test
-    void generateNewCardNumber1() {
 
 
-        ProductCardGenDef productCardGenDef = createProductCardGenDef();
-        productCardGenDef.setLastGeneratedCardNumber("5309000000000004");
-        productCardGenRepository.save(productCardGenDef);
-
-        String lastCardNumber = productCardGenDef.getStartingCardNumber();
-        String nextCardNumber = Util.generateNextCardNumber(productCardGenDef.getStartingCardNumber(),1);
-        Mono<String> cardNumberMono = numberService
-                .generateNewCardNumber(productCardGenDef.getProductId().getOrg(),productCardGenDef.getProductId().getProduct());
-
-        StepVerifier
-                .create(cardNumberMono)
-                .consumeNextWith(s -> {
-
-                    ProductCardGenDef productCardGenDef1 = productCardGenRepository.findById(productCardGenDef.getProductId()).get();
-
-                    assertAll(
-                            ()-> assertEquals(nextCardNumber,s),
-                            ()-> assertEquals(nextCardNumber,productCardGenDef1.getLastGeneratedCardNumber())
-
-                    );
-                })
-                .verifyComplete();
-
-    }
-
-    @Test
-    void generateNewCardNumber2() {
-
-
-        ProductCardGenDef productCardGenDef = createProductCardGenDef();
-        productCardGenDef.setEndingGeneratedCardNumber("5309000000000004");
-        productCardGenRepository.save(productCardGenDef);
-
-        String lastCardNumber = productCardGenDef.getLastGeneratedCardNumber();
-        String nextCardNumber = Util.generateNextCardNumber(productCardGenDef.getLastGeneratedCardNumber(),1);
-        Mono<String> cardNumberMono = numberService
-                .generateNewCardNumber(productCardGenDef.getProductId().getOrg(),productCardGenDef.getProductId().getProduct());
-
-        StepVerifier
-                .create(cardNumberMono)
-                .expectError(NumberCreationException.class)
-                .verify();
-
-    }
 
     @Test
     void generateInstrumentNumber() {

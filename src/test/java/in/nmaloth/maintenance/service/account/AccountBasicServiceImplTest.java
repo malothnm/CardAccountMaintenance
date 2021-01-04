@@ -81,33 +81,16 @@ class AccountBasicServiceImplTest {
         AccountBasic accountBasic1 = accountBasicService.createNewAccountBasic(accountBasicAddDTO).block();
 
 
-        AccountBasic accountBasic = accountBasicRepository.findById(accountBasicAddDTO.getAccountNumber()).get();
+        AccountBasic accountBasic = accountBasicRepository.findById(accountBasicAddDTO.getAccountId()).get();
 
-        Map<BalanceTypes,Long> balanceTypesMap = accountBasic.getLimitsMap();
-
-        Long creditLimit = balanceTypesMap.get(BalanceTypes.CURRENT_BALANCE);
-        Long cashLimit = balanceTypesMap.get(BalanceTypes.CASH_BALANCE);
-        Long internationalLimit = balanceTypesMap.get(BalanceTypes.INTERNATIONAL);
-        Long internationalCashLimit = balanceTypesMap.get(BalanceTypes.INTERNATIONAL_CASH);
-        Long installmentLimit = balanceTypesMap.get(BalanceTypes.INSTALLMENT_BALANCE);
-        Long internationalInstallmentLimit = balanceTypesMap.get(BalanceTypes.INTERNATIONAL_INSTALLMENT);
-        Long internationalCashInstallmentLimit = balanceTypesMap.get(BalanceTypes.INTERNATIONAL_CASH_INSTALLMENT);
-        Long installmentCashLimit = balanceTypesMap.get(BalanceTypes.INSTALLMENT_CASH);
 
         assertAll(
-                ()-> assertEquals(accountBasicAddDTO.getAccountNumber(),accountBasic.getAccountNumber()),
+                ()-> assertEquals(accountBasicAddDTO.getAccountId(),accountBasic.getAccountId()),
                 ()-> assertEquals(accountBasicAddDTO.getBlockType(),Util.getBlockType(accountBasic.getBlockType())),
                 ()-> assertEquals(accountBasicAddDTO.getOrg(),accountBasic.getOrg()),
                 ()-> assertEquals(accountBasicAddDTO.getProduct(),accountBasic.getProduct()),
-                ()-> assertEquals(accountBasicAddDTO.getBillingCurrencyCode(),accountBasic.getBillingCurrencyCode()),
-                ()-> assertEquals(500000L, creditLimit),
-                ()-> assertEquals(400000L,cashLimit),
-                ()-> assertEquals(50000L,internationalCashLimit),
-                ()-> assertEquals(150000L,internationalCashInstallmentLimit),
-                ()-> assertEquals(250000L,installmentLimit),
-                ()-> assertNull(internationalLimit),
-                ()-> assertNull(installmentCashLimit),
-                ()-> assertNull(internationalInstallmentLimit)
+                ()-> assertEquals(accountBasicAddDTO.getBillingCurrencyCode(),accountBasic.getBillingCurrencyCode())
+
         );
 
     }
@@ -120,47 +103,21 @@ class AccountBasicServiceImplTest {
         LocalDateTime localDateTime = accountBasic1.getDateBlockApplied();
         accountBasicRepository.save(accountBasic1);
 
-        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(true,accountBasic1.getAccountNumber(),null);
+        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(true,accountBasic1.getAccountId(),null);
 
         accountBasicService.updateAccountBasic(accountBasicUpdateDTO).block();
 
-        AccountBasic accountBasic = accountBasicRepository.findById(accountBasic1.getAccountNumber()).get();
+        AccountBasic accountBasic = accountBasicRepository.findById(accountBasic1.getAccountId()).get();
 
-        Long creditLimitValue = 100000L;
-        Long cashLimitValue = 60000L;
-        Long internationalCashLimitValue = 30000L;
-        Long internationalLimitValue = 70000L;
-        Long installmentLimitValue = 80000L;
-        Long installmentCashLimitValue  = 20000L;
-        Long internationalInstallmentLimitValue = 500000L;
-
-
-
-
-        Long creditLimit = accountBasic.getLimitsMap().get(BalanceTypes.CURRENT_BALANCE);
-        Long cashLimit = accountBasic.getLimitsMap().get(BalanceTypes.CASH_BALANCE);
-        Long internationalCashLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_CASH);
-        Long internationalLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL);
-        Long installmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_BALANCE);
-        Long installmentCashLimit  = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_CASH);
-        Long internationalInstallmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_INSTALLMENT);
 
 
         assertAll(
-                ()-> assertEquals(accountBasicUpdateDTO.getAccountNumber(),accountBasic.getAccountNumber()),
+                ()-> assertEquals(accountBasicUpdateDTO.getAccountId(),accountBasic.getAccountId()),
                 ()-> assertEquals(Util.getBlockType(accountBasicUpdateDTO.getBlockType()),accountBasic.getBlockType()),
                 ()-> assertEquals(accountBasicUpdateDTO.getBillingCurrencyCode(),accountBasic.getBillingCurrencyCode()),
                 ()-> assertEquals(blockType,accountBasic.getPreviousBlockType()),
                 ()-> assertEquals(localDateTime,accountBasic.getDatePreviousBLockType()),
-                ()-> assertNotNull(accountBasic.getDateBlockApplied()),
-                ()-> assertEquals(7,accountBasic.getLimitsMap().size()),
-                ()-> assertNull(installmentCashLimit),
-                ()-> assertEquals(creditLimitValue,creditLimit),
-                ()-> assertEquals(internationalCashLimitValue,internationalCashLimit),
-                ()-> assertEquals(cashLimitValue,cashLimit),
-                ()-> assertEquals(internationalLimitValue,internationalLimit),
-                ()-> assertEquals(installmentLimitValue,installmentLimit),
-                ()-> assertEquals(internationalInstallmentLimitValue, internationalInstallmentLimit)
+                ()-> assertNotNull(accountBasic.getDateBlockApplied())
         );
 
 
@@ -172,7 +129,7 @@ class AccountBasicServiceImplTest {
         AccountBasic accountBasic = createAccountBasic();
         accountBasicRepository.save(accountBasic);
 
-        Mono<AccountBasic> accountBasicMono = accountBasicService.fetchAccountBasicInfo(accountBasic.getAccountNumber());
+        Mono<AccountBasic> accountBasicMono = accountBasicService.fetchAccountBasicInfo(accountBasic.getAccountId());
 
         StepVerifier
                 .create(accountBasicMono)
@@ -201,9 +158,9 @@ class AccountBasicServiceImplTest {
         AccountBasic accountBasic = createAccountBasic();
         accountBasicRepository.save(accountBasic);
 
-        accountBasicService.deleteAccountBasic(accountBasic.getAccountNumber()).block();
+        accountBasicService.deleteAccountBasic(accountBasic.getAccountId()).block();
 
-        Optional<AccountBasic> accountBasicOptional = accountBasicRepository.findById(accountBasic.getAccountNumber());
+        Optional<AccountBasic> accountBasicOptional = accountBasicRepository.findById(accountBasic.getAccountId());
 
         assertTrue(accountBasicOptional.isEmpty());
 
@@ -211,8 +168,6 @@ class AccountBasicServiceImplTest {
 
     @Test
     void deleteAccountBasic1() {
-
-
 
         Mono<AccountBasic> accountBasicMono = accountBasicService.deleteAccountBasic("12345");
 
@@ -230,7 +185,7 @@ class AccountBasicServiceImplTest {
         AccountBasicDTO accountBasicDTO = accountBasicService.convertToDTO(accountBasic);
 
         assertAll(
-                ()-> assertEquals(accountBasic.getAccountNumber(),accountBasicDTO.getAccountNumber()),
+                ()-> assertEquals(accountBasic.getAccountId(),accountBasicDTO.getAccountId()),
                 ()-> assertEquals(accountBasic.getBillingCurrencyCode(),accountBasicDTO.getBillingCurrencyCode()),
                 ()-> assertEquals(accountBasic.getBlockType(),Util.getBlockType(accountBasicDTO.getBlockType())),
                 ()-> assertEquals(accountBasic.getOrg(),accountBasicDTO.getOrg()),
@@ -238,7 +193,6 @@ class AccountBasicServiceImplTest {
                 ()->assertEquals(accountBasic.getDateBlockApplied(),accountBasicDTO.getDateBlockCode()),
                 ()->assertEquals(accountBasic.getPreviousBlockType(),Util.getBlockType(accountBasicDTO.getPreviousBlockType())),
                 ()-> assertEquals(accountBasic.getDatePreviousBLockType(),accountBasicDTO.getDatePreviousBlockCode()),
-                ()-> assertEquals(accountBasic.getLimitsMap().size(),accountBasicDTO.getBalanceTypesDTOList().size()),
                 ()-> assertEquals(accountBasic.getAccountType(),Util.getAccountType(accountBasicDTO.getAccountType())),
                 ()-> assertEquals(accountBasic.getCustomerNumber(),accountBasicDTO.getCustomerNumber()),
                 ()-> assertEquals(accountBasic.getPreviousAccountNumber(),accountBasicDTO.getPreviousAccountNumber()),
@@ -253,31 +207,13 @@ class AccountBasicServiceImplTest {
 
         AccountBasic accountBasic = accountBasicService.convertDTOToAccountBasic(accountBasicAddDTO,createProductDef());
 
-        Map<BalanceTypes,Long> balanceTypesMap = accountBasic.getLimitsMap();
-
-        Long creditLimit = balanceTypesMap.get(BalanceTypes.CURRENT_BALANCE);
-        Long cashLimit = balanceTypesMap.get(BalanceTypes.CASH_BALANCE);
-        Long internationalLimit = balanceTypesMap.get(BalanceTypes.INTERNATIONAL);
-        Long internationalCashLimit = balanceTypesMap.get(BalanceTypes.INTERNATIONAL_CASH);
-        Long installmentLimit = balanceTypesMap.get(BalanceTypes.INSTALLMENT_BALANCE);
-        Long internationalInstallmentLimit = balanceTypesMap.get(BalanceTypes.INTERNATIONAL_INSTALLMENT);
-        Long internationalCashInstallmentLimit = balanceTypesMap.get(BalanceTypes.INTERNATIONAL_CASH_INSTALLMENT);
-        Long installmentCashLimit = balanceTypesMap.get(BalanceTypes.INSTALLMENT_CASH);
 
         assertAll(
-                ()-> assertEquals(accountBasicAddDTO.getAccountNumber(),accountBasic.getAccountNumber()),
+                ()-> assertEquals(accountBasicAddDTO.getAccountId(),accountBasic.getAccountId()),
                 ()-> assertEquals(accountBasicAddDTO.getBlockType(),Util.getBlockType(accountBasic.getBlockType())),
                 ()-> assertEquals(accountBasicAddDTO.getOrg(),accountBasic.getOrg()),
                 ()-> assertEquals(accountBasicAddDTO.getProduct(),accountBasic.getProduct()),
                 ()-> assertEquals(accountBasicAddDTO.getBillingCurrencyCode(),accountBasic.getBillingCurrencyCode()),
-                ()-> assertEquals(500000L, creditLimit),
-                ()-> assertEquals(400000L,cashLimit),
-                ()-> assertEquals(50000L,internationalCashLimit),
-                ()-> assertEquals(150000L,internationalCashInstallmentLimit),
-                ()-> assertEquals(250000L,installmentLimit),
-                ()-> assertNull(internationalLimit),
-                ()-> assertNull(installmentCashLimit),
-                ()-> assertNull(internationalInstallmentLimit),
                 ()-> assertEquals(Util.getAccountType(accountBasicAddDTO.getAccountType()),accountBasic.getAccountType()),
                 ()-> assertEquals(accountBasicAddDTO.getCustomerNumber(),accountBasic.getCustomerNumber()),
                 ()-> assertNull(accountBasic.getCorporateNumber()),
@@ -295,47 +231,19 @@ class AccountBasicServiceImplTest {
         AccountBasic accountBasic = createAccountBasic();
         BlockType blockType = accountBasic.getBlockType();
         LocalDateTime localDateTime = accountBasic.getDateBlockApplied();
-        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(true,accountBasic.getAccountNumber(),null);
+        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(true,accountBasic.getAccountId(),null);
 
         ProductDef productDef = createProductDef();
 
         accountBasicService.updateAccountBasicFromDTO(accountBasicUpdateDTO,accountBasic,productDef);
 
-        Long creditLimitValue = 100000L;
-        Long cashLimitValue = 60000L;
-        Long internationalCashLimitValue = 30000L;
-        Long internationalLimitValue = 70000L;
-        Long installmentLimitValue = 80000L;
-        Long installmentCashLimitValue  = 20000L;
-        Long internationalInstallmentLimitValue = 500000L;
-
-
-
-
-        Long creditLimit = accountBasic.getLimitsMap().get(BalanceTypes.CURRENT_BALANCE);
-        Long cashLimit = accountBasic.getLimitsMap().get(BalanceTypes.CASH_BALANCE);
-        Long internationalCashLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_CASH);
-        Long internationalLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL);
-        Long installmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_BALANCE);
-        Long installmentCashLimit  = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_CASH);
-        Long internationalInstallmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_INSTALLMENT);
-
-
         assertAll(
-                ()-> assertEquals(accountBasicUpdateDTO.getAccountNumber(),accountBasic.getAccountNumber()),
+                ()-> assertEquals(accountBasicUpdateDTO.getAccountId(),accountBasic.getAccountId()),
                 ()-> assertEquals(Util.getBlockType(accountBasicUpdateDTO.getBlockType()),accountBasic.getBlockType()),
                 ()-> assertEquals(accountBasicUpdateDTO.getBillingCurrencyCode(),accountBasic.getBillingCurrencyCode()),
                 ()-> assertEquals(blockType,accountBasic.getPreviousBlockType()),
                 ()-> assertEquals(localDateTime,accountBasic.getDatePreviousBLockType()),
-                ()-> assertNotNull(accountBasic.getDateBlockApplied()),
-                ()-> assertEquals(7,accountBasic.getLimitsMap().size()),
-                ()-> assertNull(installmentCashLimit),
-                ()-> assertEquals(creditLimitValue,creditLimit),
-                ()-> assertEquals(internationalCashLimitValue,internationalCashLimit),
-                ()-> assertEquals(cashLimitValue,cashLimit),
-                ()-> assertEquals(internationalLimitValue,internationalLimit),
-                ()-> assertEquals(installmentLimitValue,installmentLimit),
-                ()-> assertEquals(internationalInstallmentLimitValue, internationalInstallmentLimit)
+                ()-> assertNotNull(accountBasic.getDateBlockApplied())
         );
 
     }
@@ -348,45 +256,19 @@ class AccountBasicServiceImplTest {
         List<Integer> integerList = Arrays.asList(1,3);
         BlockType blockType = accountBasic.getBlockType();
         LocalDateTime localDateTime = accountBasic.getDateBlockApplied();
-        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(false,accountBasic.getAccountNumber(),integerList);
+        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(false,accountBasic.getAccountId(),integerList);
 
         ProductDef productDef = createProductDef();
 
         accountBasicService.updateAccountBasicFromDTO(accountBasicUpdateDTO,accountBasic,productDef);
 
-        Long creditLimitValue = 100000L;
-        Long cashLimitValue = 60000L;
-        Long internationalCashLimitValue = 30000L;
-        Long internationalLimitValue = 70000L;
-        Long installmentLimitValue = 80000L;
-        Long installmentCashLimitValue  = 20000L;
-        Long internationalInstallmentLimitValue = 500000L;
-
-
-
-
-        Long creditLimit = accountBasic.getLimitsMap().get(BalanceTypes.CURRENT_BALANCE);
-        Long cashLimit = accountBasic.getLimitsMap().get(BalanceTypes.CASH_BALANCE);
-        Long internationalCashLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_CASH);
-        Long internationalLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL);
-        Long installmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_BALANCE);
-        Long installmentCashLimit  = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_CASH);
-        Long internationalInstallmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_INSTALLMENT);
-
 
         assertAll(
-                ()-> assertEquals(accountBasicUpdateDTO.getAccountNumber(),accountBasic.getAccountNumber()),
+                ()-> assertEquals(accountBasicUpdateDTO.getAccountId(),accountBasic.getAccountId()),
                 ()-> assertEquals(blockType,accountBasic.getBlockType()),
                 ()-> assertEquals(localDateTime,accountBasic.getDateBlockApplied()),
-                ()-> assertEquals(accountBasicUpdateDTO.getBillingCurrencyCode(),accountBasic.getBillingCurrencyCode()),
-                ()-> assertEquals(8,accountBasic.getLimitsMap().size()),
-                ()-> assertNotNull(installmentCashLimit),
-                ()-> assertEquals(creditLimitValue,creditLimit),
-                ()-> assertEquals(internationalCashLimitValue,internationalCashLimit),
-                ()-> assertEquals(cashLimitValue,cashLimit),
-                ()-> assertEquals(internationalLimitValue,internationalLimit),
-                ()-> assertEquals(installmentLimitValue,installmentLimit),
-                ()-> assertEquals(internationalInstallmentLimitValue, internationalInstallmentLimit)
+                ()-> assertEquals(accountBasicUpdateDTO.getBillingCurrencyCode(),accountBasic.getBillingCurrencyCode())
+
         );
 
     }
@@ -398,49 +280,21 @@ class AccountBasicServiceImplTest {
         AccountBasic accountBasic = createAccountBasic();
 
         String currCode = accountBasic.getBillingCurrencyCode();
-        List<Integer> integerList = Arrays.asList(2,4,10);
         BlockType blockType = accountBasic.getBlockType();
         LocalDateTime localDateTime = accountBasic.getDateBlockApplied();
-        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(false,accountBasic.getAccountNumber(),integerList);
 
+        List<Integer> integerList = Arrays.asList(2,4,10);
         ProductDef productDef = createProductDef();
+        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(false,accountBasic.getAccountId(),integerList);
 
         accountBasicService.updateAccountBasicFromDTO(accountBasicUpdateDTO,accountBasic,productDef);
 
-        Long creditLimitValue = 100000L;
-        Long cashLimitValue = 50000L;
-        Long internationalCashLimitValue = 30000L;
-        Long internationalLimitValue = 70000L;
-        Long installmentLimitValue = 80000L;
-        Long installmentCashLimitValue  = 20000L;
-        Long internationalInstallmentLimitValue = 10000L;
-
-
-
-
-        Long creditLimit = accountBasic.getLimitsMap().get(BalanceTypes.CURRENT_BALANCE);
-        Long cashLimit = accountBasic.getLimitsMap().get(BalanceTypes.CASH_BALANCE);
-        Long internationalCashLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_CASH);
-        Long internationalLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL);
-        Long installmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_BALANCE);
-        Long installmentCashLimit  = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_CASH);
-        Long internationalInstallmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_INSTALLMENT);
-
-
         assertAll(
-                ()-> assertEquals(accountBasicUpdateDTO.getAccountNumber(),accountBasic.getAccountNumber()),
+                ()-> assertEquals(accountBasicUpdateDTO.getAccountId(),accountBasic.getAccountId()),
                 ()-> assertEquals(blockType,accountBasic.getPreviousBlockType()),
                 ()-> assertEquals(Util.getBlockType(accountBasicUpdateDTO.getBlockType()),accountBasic.getBlockType()),
                 ()-> assertEquals(localDateTime,accountBasic.getDatePreviousBLockType()),
                 ()-> assertEquals(currCode,accountBasic.getBillingCurrencyCode()),
-                ()-> assertEquals(6,accountBasic.getLimitsMap().size()),
-                ()-> assertNull(installmentCashLimit),
-                ()-> assertEquals(creditLimitValue,creditLimit),
-                ()-> assertEquals(internationalCashLimitValue,internationalCashLimit),
-                ()-> assertEquals(cashLimitValue,cashLimit),
-                ()-> assertEquals(internationalLimitValue,internationalLimit),
-                ()-> assertEquals(installmentLimitValue,installmentLimit),
-                ()-> assertEquals(internationalInstallmentLimitValue, internationalInstallmentLimit),
                 ()-> assertEquals(accountBasicUpdateDTO.getCorporateNumber(),accountBasic.getCorporateNumber())
         );
 
@@ -456,45 +310,18 @@ class AccountBasicServiceImplTest {
         List<Integer> integerList = Arrays.asList(7,8,9);
         BlockType blockType = accountBasic.getBlockType();
         LocalDateTime localDateTime = accountBasic.getDateBlockApplied();
-        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(false,accountBasic.getAccountNumber(),integerList);
+        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(false,accountBasic.getAccountId(),integerList);
 
         ProductDef productDef = createProductDef();
 
         accountBasicService.updateAccountBasicFromDTO(accountBasicUpdateDTO,accountBasic,productDef);
 
-        Long creditLimitValue = 0L;
-        Long cashLimitValue = 0L;
-        Long internationalCashLimitValue = 0L;
-        Long internationalLimitValue = 0L;
-        Long installmentLimitValue = 0L;
-        Long installmentCashLimitValue  = 0L;
-        Long internationalInstallmentCashValue = 0L;
-        Long internationalInstallmentLimitValue = 0L;
-
-
-        Long creditLimit = accountBasic.getLimitsMap().get(BalanceTypes.CURRENT_BALANCE);
-        Long cashLimit = accountBasic.getLimitsMap().get(BalanceTypes.CASH_BALANCE);
-        Long internationalCashLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_CASH);
-        Long internationalLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL);
-        Long installmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_BALANCE);
-        Long installmentCashLimit  = accountBasic.getLimitsMap().get(BalanceTypes.INSTALLMENT_CASH);
-        Long internationalInstallmentLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_INSTALLMENT);
-        Long internationalInstallmentCashLimit = accountBasic.getLimitsMap().get(BalanceTypes.INTERNATIONAL_CASH_INSTALLMENT);
 
         assertAll(
-                ()-> assertEquals(accountBasicUpdateDTO.getAccountNumber(),accountBasic.getAccountNumber()),
+                ()-> assertEquals(accountBasicUpdateDTO.getAccountId(),accountBasic.getAccountId()),
                 ()-> assertEquals(blockType,accountBasic.getBlockType()),
                 ()-> assertEquals(localDateTime,accountBasic.getDateBlockApplied()),
                 ()-> assertEquals(currCode,accountBasic.getBillingCurrencyCode()),
-                ()-> assertEquals(7,accountBasic.getLimitsMap().size()),
-                ()-> assertEquals(0,installmentCashLimit),
-                ()-> assertNull(internationalInstallmentCashLimit),
-                ()-> assertEquals(creditLimitValue,creditLimit),
-                ()-> assertEquals(internationalCashLimitValue,internationalCashLimit),
-                ()-> assertEquals(cashLimitValue,cashLimit),
-                ()-> assertEquals(internationalLimitValue,internationalLimit),
-                ()-> assertEquals(installmentLimitValue,installmentLimit),
-                ()-> assertEquals(internationalInstallmentLimitValue, internationalInstallmentLimit),
                 ()-> assertEquals(accountBasic.getAccountType(),Util.getAccountType(accountBasicUpdateDTO.getAccountType())),
                 ()-> assertEquals(accountBasicUpdateDTO.getCustomerNumber(),accountBasic.getCustomerNumber())
         );
@@ -502,25 +329,14 @@ class AccountBasicServiceImplTest {
     }
     private AccountBasic createAccountBasic(){
 
-        Map<BalanceTypes,Long> balanceTypesMap = new HashMap<>();
-
-        balanceTypesMap.put(BalanceTypes.CURRENT_BALANCE,100000L);
-        balanceTypesMap.put(BalanceTypes.CASH_BALANCE,50000L);
-        balanceTypesMap.put(BalanceTypes.INTERNATIONAL_CASH,30000L);
-        balanceTypesMap.put(BalanceTypes.INTERNATIONAL,70000L);
-        balanceTypesMap.put(BalanceTypes.INSTALLMENT_BALANCE,80000L);
-        balanceTypesMap.put(BalanceTypes.INSTALLMENT_CASH,20000L);
-        balanceTypesMap.put(BalanceTypes.INTERNATIONAL_INSTALLMENT,10000L);
-
 
         return AccountBasic.builder()
                 .org(001)
                 .product(201)
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .blockType(BlockType.BLOCK_DECLINE)
                 .dateBlockApplied(LocalDateTime.now())
                 .billingCurrencyCode("840")
-                .limitsMap(balanceTypesMap)
                 .datePreviousBLockType(LocalDateTime.of(2020,12,23,11,24,30))
                 .previousBlockType(BlockType.BLOCK_SUSPECTED_FRAUD)
                 .accountType(AccountType.CREDIT)
@@ -548,7 +364,7 @@ class AccountBasicServiceImplTest {
         );
 
         return AccountBasicAddDTO.builder()
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .org(001)
                 .product(201)
                 .billingCurrencyCode("840")
@@ -589,7 +405,7 @@ class AccountBasicServiceImplTest {
     private AccountBasicUpdateDTO createAccountUpdateDTO(boolean allfields , String accountNumber, List<Integer> fieldList){
 
         AccountBasicUpdateDTO.AccountBasicUpdateDTOBuilder builder = AccountBasicUpdateDTO.builder()
-                .accountNumber(accountNumber);
+                .accountId(accountNumber);
 
         List<BalanceTypesDTO> balanceTypesDTOListAdd = new ArrayList<>();
         List<BalanceTypesDTO> balanceTypesDTOListDelete = new ArrayList<>();

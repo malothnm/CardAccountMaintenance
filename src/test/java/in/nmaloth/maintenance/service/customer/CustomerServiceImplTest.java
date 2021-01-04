@@ -44,10 +44,10 @@ class CustomerServiceImplTest {
         CustomerAddDTO customerAddDTO = createCustomerAddDTO(true);
         customerService.createNewCustomerRecord(customerAddDTO).block();
 
-        CustomerDef customerDef = customerRepository.findById(customerAddDTO.getCustomerNumber()).get();
+        CustomerDef customerDef = customerRepository.findById(customerAddDTO.getCustomerId()).get();
 
         assertAll(
-                ()-> assertEquals(customerAddDTO.getCustomerNumber(),customerDef.getCustomerNumber()),
+                ()-> assertEquals(customerAddDTO.getCustomerId(),customerDef.getCustomerId()),
                 ()-> assertEquals(customerAddDTO.getAddressType(),Util.getAddressType(customerDef.getAddressType())),
                 ()-> assertEquals(customerAddDTO.getCustomerType(),Util.getCustomerType(customerDef.getCustomerType())),
                 ()-> assertEquals(customerAddDTO.getCustomerName(),customerDef.getCustomerName()),
@@ -73,14 +73,14 @@ class CustomerServiceImplTest {
         customerRepository.save(customerDef);
 
         CustomerUpdateDTO customerUpdateDTO = createCustomerAddDTO(true,null);
-        customerUpdateDTO.setCustomerNumber(customerDef.getCustomerNumber());
+        customerUpdateDTO.setCustomerId(customerDef.getCustomerId());
         customerService.updateCustomerRecord(customerUpdateDTO).block();
 
-        CustomerDef customerDef1 = customerRepository.findById(customerUpdateDTO.getCustomerNumber()).get();
+        CustomerDef customerDef1 = customerRepository.findById(customerUpdateDTO.getCustomerId()).get();
 
 
         assertAll(
-                ()-> assertEquals(customerUpdateDTO.getCustomerNumber(), customerDef1.getCustomerNumber()),
+                ()-> assertEquals(customerUpdateDTO.getCustomerId(), customerDef1.getCustomerId()),
                 ()-> assertEquals(customerUpdateDTO.getAddressType(),Util.getAddressType(customerDef1.getAddressType())),
                 ()-> assertEquals(customerUpdateDTO.getCustomerType(),Util.getCustomerType(customerDef1.getCustomerType())),
                 ()-> assertEquals(customerUpdateDTO.getCustomerName(),customerDef1.getCustomerName()),
@@ -116,7 +116,7 @@ class CustomerServiceImplTest {
         CustomerDef customerDef = createCustomerDef(true);
         customerRepository.save(customerDef);
 
-        Mono<CustomerDef> customerDefMono = customerService.fetchCustomerInfo(customerDef.getCustomerNumber());
+        Mono<CustomerDef> customerDefMono = customerService.fetchCustomerInfo(customerDef.getCustomerId());
 
         StepVerifier
                 .create(customerDefMono)
@@ -144,9 +144,9 @@ class CustomerServiceImplTest {
         CustomerDef customerDef = createCustomerDef(true);
         customerRepository.save(customerDef);
 
-        customerService.deleteCustomerInfo(customerDef.getCustomerNumber()).block();
+        customerService.deleteCustomerInfo(customerDef.getCustomerId()).block();
 
-        Optional<CustomerDef> customerDefOptional = customerRepository.findById(customerDef.getCustomerNumber());
+        Optional<CustomerDef> customerDefOptional = customerRepository.findById(customerDef.getCustomerId());
 
         assertTrue(customerDefOptional.isEmpty());
 
@@ -174,7 +174,7 @@ class CustomerServiceImplTest {
         CustomerDTO customerDTO = customerService.convertToDTO(customerDef);
 
         assertAll(
-                ()-> assertEquals(customerDef.getCustomerNumber(),customerDTO.getCustomerNumber()),
+                ()-> assertEquals(customerDef.getCustomerId(),customerDTO.getCustomerId()),
                 ()-> assertEquals(customerDef.getAddressType(),Util.getAddressType(customerDTO.getAddressType())),
                 ()-> assertEquals(customerDef.getCustomerType(),Util.getCustomerType(customerDTO.getCustomerType())),
                 ()-> assertEquals(customerDef.getCustomerName(),customerDTO.getCustomerName()),
@@ -197,7 +197,7 @@ class CustomerServiceImplTest {
         CustomerDTO customerDTO = customerService.convertToDTO(customerDef);
 
         assertAll(
-                ()-> assertEquals(customerDef.getCustomerNumber(),customerDTO.getCustomerNumber()),
+                ()-> assertEquals(customerDef.getCustomerId(),customerDTO.getCustomerId()),
                 ()-> assertEquals(customerDef.getAddressType(),Util.getAddressType(customerDTO.getAddressType())),
                 ()-> assertEquals(customerDef.getCustomerType(),Util.getCustomerType(customerDTO.getCustomerType())),
                 ()-> assertEquals(customerDef.getCustomerName(),customerDTO.getCustomerName()),
@@ -218,7 +218,7 @@ class CustomerServiceImplTest {
         CustomerDef customerDef = customerService.convertDTOToCustomerDef(customerAddDTO);
 
         assertAll(
-                ()-> assertEquals(customerAddDTO.getCustomerNumber(),customerDef.getCustomerNumber()),
+                ()-> assertEquals(customerAddDTO.getCustomerId(),customerDef.getCustomerId()),
                 ()-> assertEquals(customerAddDTO.getAddressType(),Util.getAddressType(customerDef.getAddressType())),
                 ()-> assertEquals(customerAddDTO.getCustomerType(),Util.getCustomerType(customerDef.getCustomerType())),
                 ()-> assertEquals(customerAddDTO.getCustomerName(),customerDef.getCustomerName()),
@@ -240,7 +240,7 @@ class CustomerServiceImplTest {
         CustomerDef customerDef = customerService.convertDTOToCustomerDef(customerAddDTO);
 
         assertAll(
-                ()-> assertEquals(customerAddDTO.getCustomerNumber(),customerDef.getCustomerNumber()),
+                ()-> assertEquals(customerAddDTO.getCustomerId(),customerDef.getCustomerId()),
                 ()-> assertEquals(customerAddDTO.getAddressType(),Util.getAddressType(customerDef.getAddressType())),
                 ()-> assertEquals(customerAddDTO.getCustomerType(),Util.getCustomerType(customerDef.getCustomerType())),
                 ()-> assertEquals(customerAddDTO.getCustomerName(),customerDef.getCustomerName()),
@@ -260,12 +260,12 @@ class CustomerServiceImplTest {
 
         CustomerDef customerDef = createCustomerDef(true);
         CustomerUpdateDTO customerUpdateDTO = createCustomerAddDTO(true,null);
-        customerUpdateDTO.setCustomerNumber(customerDef.getCustomerNumber());
+        customerUpdateDTO.setCustomerId(customerDef.getCustomerId());
 
         customerService.updateCustomerFromDTO(customerUpdateDTO,customerDef);
 
         assertAll(
-                ()-> assertEquals(customerUpdateDTO.getCustomerNumber(),customerDef.getCustomerNumber()),
+                ()-> assertEquals(customerUpdateDTO.getCustomerId(),customerDef.getCustomerId()),
                 ()-> assertEquals(customerUpdateDTO.getAddressType(),Util.getAddressType(customerDef.getAddressType())),
                 ()-> assertEquals(customerUpdateDTO.getCustomerType(),Util.getCustomerType(customerDef.getCustomerType())),
                 ()-> assertEquals(customerUpdateDTO.getCustomerName(),customerDef.getCustomerName()),
@@ -287,12 +287,12 @@ class CustomerServiceImplTest {
 
         CustomerDef customerDef = createCustomerDef(false);
         CustomerUpdateDTO customerUpdateDTO = createCustomerAddDTO(true,null);
-        customerUpdateDTO.setCustomerNumber(customerDef.getCustomerNumber());
+        customerUpdateDTO.setCustomerId(customerDef.getCustomerId());
 
         customerService.updateCustomerFromDTO(customerUpdateDTO,customerDef);
 
         assertAll(
-                ()-> assertEquals(customerUpdateDTO.getCustomerNumber(),customerDef.getCustomerNumber()),
+                ()-> assertEquals(customerUpdateDTO.getCustomerId(),customerDef.getCustomerId()),
                 ()-> assertEquals(customerUpdateDTO.getAddressType(),Util.getAddressType(customerDef.getAddressType())),
                 ()-> assertEquals(customerUpdateDTO.getCustomerType(),Util.getCustomerType(customerDef.getCustomerType())),
                 ()-> assertEquals(customerUpdateDTO.getCustomerName(),customerDef.getCustomerName()),
@@ -322,12 +322,12 @@ class CustomerServiceImplTest {
 
         List<Integer> integerList = Arrays.asList(1,2,3,4,5,9);
         CustomerUpdateDTO customerUpdateDTO = createCustomerAddDTO(false,integerList);
-        customerUpdateDTO.setCustomerNumber(customerDef.getCustomerNumber());
+        customerUpdateDTO.setCustomerId(customerDef.getCustomerId());
 
         customerService.updateCustomerFromDTO(customerUpdateDTO,customerDef);
 
         assertAll(
-                ()-> assertEquals(customerUpdateDTO.getCustomerNumber(),customerDef.getCustomerNumber()),
+                ()-> assertEquals(customerUpdateDTO.getCustomerId(),customerDef.getCustomerId()),
                 ()-> assertEquals(customerUpdateDTO.getAddressType(),Util.getAddressType(customerDef.getAddressType())),
                 ()-> assertEquals(customerUpdateDTO.getCustomerType(),Util.getCustomerType(customerDef.getCustomerType())),
                 ()-> assertEquals(customerUpdateDTO.getCustomerName(),customerDef.getCustomerName()),
@@ -357,12 +357,12 @@ class CustomerServiceImplTest {
 
         List<Integer> integerList = Arrays.asList(6,7,8,10,11,12);
         CustomerUpdateDTO customerUpdateDTO = createCustomerAddDTO(false,integerList);
-        customerUpdateDTO.setCustomerNumber(customerDef.getCustomerNumber());
+        customerUpdateDTO.setCustomerId(customerDef.getCustomerId());
 
         customerService.updateCustomerFromDTO(customerUpdateDTO,customerDef);
 
         assertAll(
-                ()-> assertEquals(customerUpdateDTO.getCustomerNumber(),customerDef.getCustomerNumber()),
+                ()-> assertEquals(customerUpdateDTO.getCustomerId(),customerDef.getCustomerId()),
                 ()-> assertEquals(prevAddressType,customerDef.getAddressType()),
                 ()-> assertEquals(prevCustomerType,customerDef.getCustomerType()),
                 ()-> assertEquals(prevName,customerDef.getCustomerName()),
@@ -386,7 +386,7 @@ class CustomerServiceImplTest {
 
 
         CustomerDef.CustomerDefBuilder builder = CustomerDef.builder()
-                .customerNumber(UUID.randomUUID().toString().replace("-",""))
+                .customerId(UUID.randomUUID().toString().replace("-",""))
                 .customerType(CustomerType.OWNER)
                 .addressType(AddressType.PRIMARY)
                 .customerName("Test 1")
@@ -423,7 +423,7 @@ class CustomerServiceImplTest {
 
 
         CustomerAddDTO.CustomerAddDTOBuilder builder = CustomerAddDTO.builder()
-                .customerNumber(UUID.randomUUID().toString().replace("-",""))
+                .customerId(UUID.randomUUID().toString().replace("-",""))
                 .customerType(Util.getCustomerType(CustomerType.CO_OWNER))
                 .addressType(Util.getAddressType(AddressType.HOME))
                 .customerName("Test 2")
@@ -476,7 +476,7 @@ class CustomerServiceImplTest {
 
 
         CustomerUpdateDTO.CustomerUpdateDTOBuilder builder = CustomerUpdateDTO.builder()
-                .customerNumber(UUID.randomUUID().toString().replace("-",""));
+                .customerId(UUID.randomUUID().toString().replace("-",""));
 
 
         if(allFields){

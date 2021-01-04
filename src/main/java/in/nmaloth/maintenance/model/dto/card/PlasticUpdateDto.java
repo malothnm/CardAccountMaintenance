@@ -17,12 +17,10 @@ import java.time.LocalDate;
 @Builder
 public class PlasticUpdateDto {
 
-    @CreditCardNumber
     @NotNull
-    private String cardNumber;
+    private String cardId;
 
     private Boolean cardActivate;
-
 
     private String plasticId;
 

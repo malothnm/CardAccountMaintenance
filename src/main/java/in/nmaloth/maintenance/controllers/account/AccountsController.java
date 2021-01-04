@@ -10,12 +10,9 @@ import in.nmaloth.maintenance.model.dto.account.AccountAccumValuesDTO;
 import in.nmaloth.maintenance.model.dto.account.AccountBasicAddDTO;
 import in.nmaloth.maintenance.model.dto.account.AccountBasicDTO;
 import in.nmaloth.maintenance.model.dto.account.AccountBasicUpdateDTO;
-import in.nmaloth.maintenance.model.dto.card.PlasticUpdateDto;
-import in.nmaloth.maintenance.model.dto.card.PlasticsDTO;
 import in.nmaloth.maintenance.service.CombinedCreateService;
 import in.nmaloth.maintenance.service.account.AccountAccumValuesService;
 import in.nmaloth.maintenance.service.account.AccountBasicService;
-import in.nmaloth.maintenance.service.cards.PlasticServices;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -71,38 +68,23 @@ public class AccountsController {
         Mono<AccountBasic> accountBasicMono = accountBasicService.updateAccountBasic(accountBasicUpdateDTO);
 
         Mono<AccountAccumValues> accountAccumValuesMono = accountAccumValuesService
-                .fetchAccountAccumValuesByAccountNumber(accountBasicUpdateDTO.getAccountNumber());
+                .updateAccumValues(accountBasicUpdateDTO.getBalanceTypesDTOListAdd(),accountBasicUpdateDTO.getBalanceTypesDTOListDelete(),accountBasicUpdateDTO.getAccountId());
 
         return accountBasicMono.zipWith(accountAccumValuesMono)
-                .map(tuple2 -> AccountsCombined.builder()
-                        .accountBasic(tuple2.getT1())
-                        .accountAccumValues(accountAccumValuesService.updateNewAccumValues(accountBasicUpdateDTO.getAccountNumber(),
-                                tuple2.getT1().getLimitsMap().keySet(), tuple2.getT2()))
-                        .build()
-
-                ).flatMap(accountsCombined -> accountAccumValuesService.saveAccountAccumValues(accountsCombined.getAccountAccumValues())
-                        .map(accountAccumValues -> AccountsCombinedDTO.builder()
-                                .accountAccumValuesDTO(accountAccumValuesService.convertToDTO(accountAccumValues))
-                                .accountBasicDTO(accountBasicService.convertToDTO(accountsCombined.getAccountBasic()))
-                                .build()
-                        )
-
-                );
-
+                .map(tuple2 -> AccountsCombinedDTO.builder()
+                        .accountBasicDTO(accountBasicService.convertToDTO(tuple2.getT1()))
+                        .accountAccumValuesDTO(accountAccumValuesService.convertToDTO(tuple2.getT2()))
+                        .build())
+                ;
 
     }
 
     @GetMapping(EndPoints.ACCOUNTS_LIMITS_ACCOUNT_NBR)
     public Mono<AccountAccumValuesDTO> fetchAccountLimits(@PathVariable String accountNumber) {
-        return accountAccumValuesService.fetchAccountAccumValuesByAccountNumber(accountNumber)
+        return accountAccumValuesService.fetchAccountAccumValuesByAccountId(accountNumber)
                 .map(accountAccumValues -> accountAccumValuesService.convertToDTO(accountAccumValues))
                 ;
     }
-
-
-
-
-
 
 
 }

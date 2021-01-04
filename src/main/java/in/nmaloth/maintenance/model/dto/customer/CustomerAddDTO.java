@@ -20,7 +20,7 @@ import java.util.Map;
 @Builder
 public class CustomerAddDTO {
 
-    private String customerNumber;
+    private String customerId;
 
     @NotNull
     @Pattern(regexp = "H|O|P|C|S|1|2|3|4" )

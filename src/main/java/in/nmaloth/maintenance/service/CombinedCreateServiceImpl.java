@@ -83,7 +83,7 @@ public class CombinedCreateServiceImpl implements CombinedCreateService {
         return getAccountNumberMono(accountBasicAddDTO).zipWith(getCustomerOptionalMono(accountBasicAddDTO.getCustomerNumber()))
                 .map(tuple2 -> tuple2.getT1())
                 .flatMap(accountBasicAddDTO1 -> accountBasicService.createNewAccountBasic(accountBasicAddDTO1))
-                .map(accountBasic -> createCombinedAccounts(accountBasic))
+                .map(accountBasic -> createCombinedAccounts(accountBasic,accountBasicAddDTO))
                 .flatMap(accountsCombined -> accountAccumValuesService.saveAccountAccumValues(accountsCombined.getAccountAccumValues())
                         .map(accountAccumValues -> createCombinedAccountsDTQ(accountsCombined.getAccountBasic(), accountAccumValues))
                 );
@@ -96,20 +96,12 @@ public class CombinedCreateServiceImpl implements CombinedCreateService {
 
         return reducedMono.zipWith(getCardNumberNumberMono(cardBasicAddDTO))
                 .map(tuple2 -> tuple2.getT2())
-                .flatMap(cardBasicAddDTO1 -> {
-
-                     log.debug(" Test {}", cardBasicAddDTO1.getCustomerNumber() );
-                    return cardsBasicService.createNewCardsRecord(cardBasicAddDTO1);
-
-                } )
-                .map(cardsBasic -> createCardsCombine(cardsBasic))
+                .flatMap(cardBasicAddDTO1 -> cardsBasicService.createNewCardsRecord(cardBasicAddDTO1))
+                .map(cardsBasic -> createCardsCombine(cardsBasic,cardBasicAddDTO))
                 .flatMap(cardsCombined -> {
-
-                            log.debug("Test");
                             return cardAccumValuesService.saveAccountAccumValues(cardsCombined.getCardAccumulatedValues())
                                 .map(cardAccumulatedValues -> cardsCombined)
                             ;
-
                         }
                        )
                 .map(cardsCombined -> convertCardsCombinedToDTO(cardsCombined));
@@ -140,16 +132,10 @@ public class CombinedCreateServiceImpl implements CombinedCreateService {
         return Mono.just(instrumentAddDTO);
     }
 
-    private Mono<String> generateInstrumentNumber(InstrumentType instrumentType,int org, int product){
-
-        switch (instrumentType){
-            case CARD_LESS:
-                return Mono.just(UUID.randomUUID().toString().replace("-",""));
-            default:
-                return numberService.generateNewCardNumber(org,product);
-        }
-
+    private Mono<String> generateInstrumentNumber(InstrumentType instrumentType,int org,int product){
+        return numberService.generateInstrumentNumber(instrumentType,org,product);
     }
+
 
     private CardsCombinedDTO convertCardsCombinedToDTO(CardsCombined cardsCombined) {
 
@@ -159,20 +145,12 @@ public class CombinedCreateServiceImpl implements CombinedCreateService {
                 .build();
     }
 
-    private CardsCombined createCardsCombine(CardsBasic cardsBasic) {
-
-
-        List<PeriodicLimitSet> periodicLimitDTOList = cardsBasic.getPeriodicTypePeriodicCardLimitMap().entrySet()
-                .stream()
-                .map(periodicTypeMapEntry -> buildPeriodicLimitSet(periodicTypeMapEntry))
-                .collect(Collectors.toList());
-
-        Set<PeriodicLimitSet> periodicLimitDTOSet = new HashSet<>(periodicLimitDTOList);
+    private CardsCombined createCardsCombine(CardsBasic cardsBasic,CardBasicAddDTO cardBasicAddDTO) {
 
         return CardsCombined.builder()
                 .cardsBasic(cardsBasic)
-                .cardAccumulatedValues(cardAccumValuesService.initializeAccumValues(cardsBasic.getCardNumber(),
-                        periodicLimitDTOSet,
+                .cardAccumulatedValues(cardAccumValuesService.initializeAccumValues(cardsBasic.getCardId(),
+                        cardBasicAddDTO.getPeriodicCardLimitDTOList(),
                         cardsBasic.getOrg(),
                         cardsBasic.getProduct())).build();
 
@@ -193,7 +171,7 @@ public class CombinedCreateServiceImpl implements CombinedCreateService {
         }
 
         Mono<String> customerNumberMono = getCustomerOptionalMono(customerNumber)
-                .map(customerDefOptional -> customerDefOptional.get().getCustomerNumber());
+                .map(customerDefOptional -> customerDefOptional.get().getCustomerId());
 
         return customerNumberMono.concatWith(createAccountNumberFlux(accountDefDTOSet))
                 .reduce((s, s2) -> s2);
@@ -205,29 +183,29 @@ public class CombinedCreateServiceImpl implements CombinedCreateService {
     private Flux<String> createAccountNumberFlux(Set<AccountDefDTO> accountDefDTOSet) {
 
         List<String> accountList = accountDefDTOSet.stream()
-                .map(accountDefDTO -> accountDefDTO.getAccountNumber())
+                .map(accountDefDTO -> accountDefDTO.getAccountId())
                 .collect(Collectors.toList());
 
         return Flux.fromIterable(accountList)
                 .flatMap(accountNumber -> getAccountBasicMono(accountNumber))
-                .map(accountBasicOptional -> accountBasicOptional.get().getAccountNumber());
+                .map(accountBasicOptional -> accountBasicOptional.get().getAccountId());
     }
 
 
     private Mono<CustomerAddDTO> getCustomerNumberMono(CustomerAddDTO customerAddDTO) {
 
-        if (customerAddDTO.getCustomerNumber() == null) {
-            return numberService.generateNewCustomerNumber()
-                    .map(customerNumber -> {
-                        customerAddDTO.setCustomerNumber(customerNumber);
+        if (customerAddDTO.getCustomerId() == null) {
+            return numberService.generateNewCustomerId()
+                    .map(customerId -> {
+                        customerAddDTO.setCustomerId(customerId);
                         return customerAddDTO;
                     })
                     ;
         }
-        return customerService.fetchCustomerInfoOptional(customerAddDTO.getCustomerNumber())
+        return customerService.fetchCustomerInfoOptional(customerAddDTO.getCustomerId())
                 .doOnNext(customerDefOptional -> {
                     if (customerDefOptional.isPresent()) {
-                        throw new AlreadyPresentException("Customer id already Present " + customerAddDTO.getCustomerNumber());
+                        throw new AlreadyPresentException("Customer id already Present " + customerAddDTO.getCustomerId());
                     }
                 })
                 .map(customerDefOptional -> customerAddDTO);
@@ -236,18 +214,18 @@ public class CombinedCreateServiceImpl implements CombinedCreateService {
 
     private Mono<AccountBasicAddDTO> getAccountNumberMono(AccountBasicAddDTO accountBasicAddDTO) {
 
-        if (accountBasicAddDTO.getAccountNumber() == null) {
-            return numberService.generateNewAccountNumber()
+        if (accountBasicAddDTO.getAccountId() == null) {
+            return numberService.generateNewAccountId()
                     .map(accountNumber -> {
-                        accountBasicAddDTO.setAccountNumber(accountNumber);
+                        accountBasicAddDTO.setAccountId(accountNumber);
                         return accountBasicAddDTO;
                     })
                     ;
         }
-        return accountBasicService.fetchAccountBasicInfoOptional(accountBasicAddDTO.getAccountNumber())
+        return accountBasicService.fetchAccountBasicInfoOptional(accountBasicAddDTO.getAccountId())
                 .doOnNext(accountBasicOptional -> {
                     if (accountBasicOptional.isPresent()) {
-                        throw new AlreadyPresentException("Account Number already Present. Cannot Add " + accountBasicAddDTO.getAccountNumber());
+                        throw new AlreadyPresentException("Account Number already Present. Cannot Add " + accountBasicAddDTO.getAccountId());
                     }
                 })
                 .map(accountBasicOptional -> accountBasicAddDTO);
@@ -274,12 +252,12 @@ public class CombinedCreateServiceImpl implements CombinedCreateService {
                 });
     }
 
-    private AccountsCombined createCombinedAccounts(AccountBasic accountBasic) {
+    private AccountsCombined createCombinedAccounts(AccountBasic accountBasic,AccountBasicAddDTO accountBasicAddDTO) {
 
         return AccountsCombined.builder()
                 .accountBasic(accountBasic)
-                .accountAccumValues(accountAccumValuesService.initializeAccumValues(accountBasic.getAccountNumber(),
-                        accountBasic.getLimitsMap().keySet()))
+                .accountAccumValues(accountAccumValuesService.initializeAccumValues(accountBasic.getAccountId(),
+                        accountBasicAddDTO.getBalanceTypesDTOList(),accountBasic.getOrg(),accountBasic.getProduct()))
                 .build();
     }
 
@@ -294,15 +272,15 @@ public class CombinedCreateServiceImpl implements CombinedCreateService {
 
     private Mono<CardBasicAddDTO> getCardNumberNumberMono(CardBasicAddDTO cardBasicAddDTO) {
 
-        if (cardBasicAddDTO.getCardNumber() == null) {
-            return numberService.generateNewCardNumber(cardBasicAddDTO.getOrg(), cardBasicAddDTO.getProduct())
-                    .map(cardNumber -> {
-                        cardBasicAddDTO.setCardNumber(cardNumber);
+        if (cardBasicAddDTO.getCardId() == null) {
+            return numberService.generateNewCardId()
+                    .map(cardId -> {
+                        cardBasicAddDTO.setCardId(cardId);
                         return cardBasicAddDTO;
                     })
                     ;
         }
-        return cardsBasicService.fetchCardInfOptional(cardBasicAddDTO.getCardNumber())
+        return cardsBasicService.fetchCardInfOptional(cardBasicAddDTO.getCardId())
                 .doOnNext(cardsBasicOptional -> {
                     if (cardsBasicOptional.isPresent()) {
                         throw new AlreadyPresentException("Card Number already Present ");

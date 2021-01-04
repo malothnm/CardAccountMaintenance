@@ -10,7 +10,6 @@
            http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
 
-    <bean class="com.nithin.Server.config.TestPostProcessor" />
 
 
 </beans>

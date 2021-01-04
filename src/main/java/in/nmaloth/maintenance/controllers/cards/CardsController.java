@@ -81,25 +81,12 @@ public class CardsController {
     public Mono<CardsCombinedDTO> updateCardsBasic(@Valid @RequestBody CardBasicUpdateDTO cardBasicUpdateDTO){
 
         Mono<CardsBasic> cardBasicMono = cardsBasicService.updateCards(cardBasicUpdateDTO);
-        Mono<CardAccumulatedValues> cardAccumulatedValuesMono = cardAccumValuesService.fetchCardAccumValuesByCardNumber(cardBasicUpdateDTO.getCardNumber());
+        Mono<CardAccumulatedValues> cardAccumulatedValuesMono = cardAccumValuesService
+                .updateNewAccumValues(cardBasicUpdateDTO.getPeriodicCardLimitDTOAddList(),
+                        cardBasicUpdateDTO.getPeriodicCardLimitDTODeleteList(),cardBasicUpdateDTO.getCardId());
 
         return cardBasicMono.zipWith(cardAccumulatedValuesMono)
                 .map(tuple2 ->  createCardsCombine(tuple2.getT1(),tuple2.getT2()))
-                .flatMap(cardsCombined -> cardAccumValuesService.saveAccountAccumValues(cardsCombined.getCardAccumulatedValues())
-                        .map(cardAccumulatedValues -> cardsCombined)
-                )
-                .doOnNext(cardsCombined -> {
-
-                    if(cardBasicUpdateDTO.getAccountDefDTOSetDelete() != null || cardBasicUpdateDTO.getAccountDefDTOSetAdd() != null){
-                        instrumentService.fetchAllInstrumentsForCard(cardsCombined.getCardsBasic().getCardNumber())
-                                .map(instrument -> {
-                                    instrument.setAccountDefSet(cardsCombined.getCardsBasic().getAccountDefSet());
-                                    return instrument;
-                                })
-                                .flatMap(instrument -> instrumentService.saveInstrument(instrument))
-                                .subscribe();
-                    }
-                } )
                 .map(cardsCombined -> CardsCombinedDTO.builder()
                         .cardBasicDTO(cardsBasicService.convertToDTO(cardsCombined.getCardsBasic()))
                         .cardAccumValuesDTO(cardAccumValuesService.convertToDTO(cardsCombined.getCardAccumulatedValues()))
@@ -109,12 +96,12 @@ public class CardsController {
     }
 
     @PostMapping(EndPoints.CARDS_NEW_PLASTIC)
-    public Mono<PlasticsDTO> createNewPlastics(@Valid @RequestBody PlasticUpdateDto plasticUpdateDto){
+    public Mono<CardBasicDTO> createNewPlastics(@Valid @RequestBody PlasticUpdateDto plasticUpdateDto){
 
         plasticServices.validatePlasticForNewPlastic(plasticUpdateDto);
 
         return plasticServices.createNewPlastic(plasticUpdateDto)
-                .map(plastic -> plasticServices.convertPlasticDTO(plastic));
+                .map(cardsBasic -> cardsBasicService.convertToDTO(cardsBasic));
 
     }
 
@@ -127,10 +114,10 @@ public class CardsController {
     }
 
     @DeleteMapping(EndPoints.CARDS_CARD_NBR_PLASTIC_ID)
-    public Mono<PlasticsDTO> deletePlasticInfo(@PathVariable String cardNumber, @PathVariable String plasticId){
+    public Mono<CardBasicDTO> deletePlasticInfo(@PathVariable String cardNumber, @PathVariable String plasticId){
 
         return plasticServices.deletePlasticInfo(plasticId,cardNumber)
-                .map(plastic -> plasticServices.convertPlasticDTO(plastic));
+                .map(cardsBasic -> cardsBasicService.convertToDTO(cardsBasic));
 
     }
 
@@ -150,27 +137,19 @@ public class CardsController {
     }
 
     @DeleteMapping(EndPoints.CARDS_PLASTIC_CARD_NUMBER)
-    public Flux<PlasticsDTO> deletePlasticInfoForCard(@PathVariable String cardNumber){
+    public Mono<CardBasicDTO> deletePlasticInfoForCard(@PathVariable String cardNumber){
 
         return plasticServices.deleteAllPlastics(cardNumber)
-                .map(plastic -> plasticServices.convertPlasticDTO(plastic));
+                .map(cardsBasic -> cardsBasicService.convertToDTO(cardsBasic));
 
     }
 
     private CardsCombined createCardsCombine(CardsBasic cardsBasic,CardAccumulatedValues cardAccumulatedValues) {
 
-
-        List<PeriodicLimitSet> periodicLimitDTOList = cardsBasic.getPeriodicTypePeriodicCardLimitMap().entrySet()
-                .stream()
-                .map(periodicTypeMapEntry -> buildPeriodicLimitSet(periodicTypeMapEntry))
-                .collect(Collectors.toList());
-
-        Set<PeriodicLimitSet> periodicLimitDTOSet = new HashSet<>(periodicLimitDTOList);
-
         return CardsCombined.builder()
                 .cardsBasic(cardsBasic)
-                .cardAccumulatedValues(cardAccumValuesService.updateNewAccumValues(
-                        periodicLimitDTOSet, cardAccumulatedValues)).build();
+                .cardAccumulatedValues(cardAccumulatedValues)
+                .build();
 
     }
 

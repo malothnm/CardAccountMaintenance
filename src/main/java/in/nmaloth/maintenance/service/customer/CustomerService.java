@@ -12,9 +12,9 @@ public interface CustomerService {
 
     Mono<CustomerDef> createNewCustomerRecord(CustomerAddDTO customerAddDTO);
     Mono<CustomerDef> updateCustomerRecord(CustomerUpdateDTO customerUpdateDTO);
-    Mono<CustomerDef> fetchCustomerInfo(String customerNumber);
-    Mono<Optional<CustomerDef>> fetchCustomerInfoOptional(String customerNumber);
-    Mono<CustomerDef> deleteCustomerInfo(String customerNumber);
+    Mono<CustomerDef> fetchCustomerInfo(String customerId);
+    Mono<Optional<CustomerDef>> fetchCustomerInfoOptional(String customerId);
+    Mono<CustomerDef> deleteCustomerInfo(String customerId);
 
     CustomerDTO convertToDTO(CustomerDef customerDef);
     CustomerDef convertDTOToCustomerDef(CustomerAddDTO customerAddDTO);

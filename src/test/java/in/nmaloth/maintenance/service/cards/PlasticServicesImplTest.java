@@ -1,6 +1,7 @@
 package in.nmaloth.maintenance.service.cards;
 
 import in.nmaloth.entity.BlockType;
+import in.nmaloth.entity.account.AccountDef;
 import in.nmaloth.entity.account.AccountType;
 import in.nmaloth.entity.account.BalanceTypes;
 import in.nmaloth.entity.card.*;
@@ -11,7 +12,6 @@ import in.nmaloth.maintenance.exception.NotFoundException;
 import in.nmaloth.maintenance.model.dto.account.AccountDefDTO;
 import in.nmaloth.maintenance.model.dto.card.*;
 import in.nmaloth.maintenance.repository.card.CardsBasicRepository;
-import in.nmaloth.maintenance.repository.card.PlasticRepository;
 import in.nmaloth.maintenance.repository.product.ProductDefRepository;
 import in.nmaloth.maintenance.util.Util;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,8 +46,7 @@ class PlasticServicesImplTest {
     @Autowired
     private CardsBasicService cardsBasicService;
 
-    @Autowired
-    private PlasticRepository plasticRepository;
+
 
     @Autowired
     private CardsBasicRepository cardsBasicRepository;
@@ -61,35 +60,34 @@ class PlasticServicesImplTest {
 
         productDefRepository.findAll()
                 .forEach(productDef -> productDefRepository.delete(productDef));
+
         updateProductTable();
-        plasticRepository.findAll()
-                .forEach(plastic -> plasticRepository.delete(plastic));
 
         cardsBasicRepository.findAll()
                 .forEach(cardsBasic -> cardsBasicRepository.delete(cardsBasic));
 
 
-    }
-
-
-    @Test
-    void savePlastic(){
-        Plastic plastic = createPlastic();
-        plasticServices.savePlastic(plastic).block();
-
-        Optional<Plastic> plasticOptional = plasticRepository.findById(plastic.getPlasticKey());
-
-        assertTrue(plasticOptional.isPresent());
 
     }
+
 
 
     @Test
     void fetchPlasticInfo(){
-        Plastic plastic = createPlastic();
-        plasticServices.savePlastic(plastic).block();
+        Plastic plastic1 = createPlastic();
+        Plastic plastic2 = createPlastic();
+        Plastic plastic3 = createPlastic();
 
-        Mono<Plastic> plasticMono = plasticServices.fetchPlasticInfo(plastic.getPlasticKey().getId(),plastic.getCardNumber());
+        List<Plastic> plasticList = new ArrayList<>();
+
+        plasticList.add(plastic1);
+        plasticList.add(plastic2);
+        plasticList.add(plastic3);
+
+        CardsBasic cardsBasic = createCardBasic(UUID.randomUUID().toString().replace("-",""),plasticList);
+        cardsBasicRepository.save(cardsBasic);
+
+        Mono<Plastic> plasticMono = plasticServices.fetchPlasticInfo(plastic2.getPlasticId(),cardsBasic.getCardId());
 
         StepVerifier.create(plasticMono)
                 .expectNextCount(1)
@@ -100,6 +98,15 @@ class PlasticServicesImplTest {
 
     @Test
     void fetchPlasticInfo1(){
+
+        Plastic plastic1 = createPlastic();
+        Plastic plastic2 = createPlastic();
+        Plastic plastic3 = createPlastic();
+
+        List<Plastic> plasticList = new ArrayList<>();
+        CardsBasic cardsBasic = createCardBasic(UUID.randomUUID().toString().replace("-",""),plasticList);
+        cardsBasicRepository.save(cardsBasic);
+
         Mono<Plastic> plasticMono = plasticServices.fetchPlasticInfo("123","3456");
 
         StepVerifier.create(plasticMono)
@@ -112,26 +119,48 @@ class PlasticServicesImplTest {
     @Test
     void deletePlasticInfo(){
 
-        Plastic plastic = createPlastic();
-        plasticServices.savePlastic(plastic).block();
 
-        plasticServices.deletePlasticInfo(plastic.getPlasticKey().getId(),plastic.getCardNumber()).block();
-        Optional<Plastic> plasticOptional = plasticRepository.findById(plastic.getPlasticKey());
+        Plastic plastic1 = createPlastic();
+        Plastic plastic2 = createPlastic();
+        Plastic plastic3 = createPlastic();
 
-        assertTrue(plasticOptional.isEmpty());
+        List<Plastic> plasticList = new ArrayList<>();
+
+        plasticList.add(plastic1);
+        plasticList.add(plastic2);
+        plasticList.add(plastic3);
+
+        CardsBasic cardsBasic = createCardBasic(UUID.randomUUID().toString().replace("-",""),plasticList);
+        cardsBasicRepository.save(cardsBasic);
+
+        plasticServices.deletePlasticInfo(plastic2.getPlasticId(),cardsBasic.getCardId()).block();
+        CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
+
+        Optional<Plastic> optionalPlastic = cardsBasic1.getPlasticList()
+                .stream()
+                .filter(plastic -> plastic.getPlasticId().equals(plastic2.getPlasticId()))
+                .findFirst();
+
+
+        assertTrue(optionalPlastic.isEmpty());
 
     }
 
     @Test
     void deletePlasticInfo1(){
 
-        Plastic plastic = createPlastic();
-        plasticServices.savePlastic(plastic).block();
+        Plastic plastic1 = createPlastic();
+        Plastic plastic2 = createPlastic();
+        Plastic plastic3 = createPlastic();
 
-        Mono<Plastic> plasticMono = plasticServices.deletePlasticInfo("1234", "3244");
+        List<Plastic> plasticList = new ArrayList<>();
+        CardsBasic cardsBasic = createCardBasic(UUID.randomUUID().toString().replace("-",""),plasticList);
+        cardsBasicRepository.save(cardsBasic);
+
+        Mono<CardsBasic> cardsBasicMono = plasticServices.deletePlasticInfo("1234", "3244");
 
         StepVerifier
-                .create(plasticMono)
+                .create(cardsBasicMono)
                 .expectError(NotFoundException.class)
                 .verify();
 
@@ -141,16 +170,21 @@ class PlasticServicesImplTest {
     @Test
     void fetchAllPlasticInfo(){
 
-        Plastic plastic = createPlastic();
-        plasticServices.savePlastic(plastic).block();
+        Plastic plastic1 = createPlastic();
+        Plastic plastic2 = createPlastic();
+        Plastic plastic3 = createPlastic();
 
-        plastic.getPlasticKey().setId(UUID.randomUUID().toString().replace("-",""));
-        plasticServices.savePlastic(plastic).block();
+        List<Plastic> plasticList = new ArrayList<>();
 
-        plastic.getPlasticKey().setId(UUID.randomUUID().toString().replace("-",""));
-        plasticServices.savePlastic(plastic).block();
+        plasticList.add(plastic1);
+        plasticList.add(plastic2);
+        plasticList.add(plastic3);
 
-        Flux<Plastic> plasticFlux = plasticServices.fetchAllPlasticInfo(plastic.getCardNumber());
+
+        CardsBasic cardsBasic = createCardBasic(UUID.randomUUID().toString().replace("-",""),plasticList);
+        cardsBasicRepository.save(cardsBasic);
+
+        Flux<Plastic> plasticFlux = plasticServices.fetchAllPlasticInfo(cardsBasic.getCardId());
 
         StepVerifier
                 .create(plasticFlux)
@@ -163,24 +197,24 @@ class PlasticServicesImplTest {
     @Test
     void deleteAllPlastics(){
 
-        Plastic plastic = createPlastic();
-        plasticServices.savePlastic(plastic).block();
-
-        plastic.getPlasticKey().setId(UUID.randomUUID().toString().replace("-",""));
-        plasticServices.savePlastic(plastic).block();
-
-        plastic.getPlasticKey().setId(UUID.randomUUID().toString().replace("-",""));
-        plasticServices.savePlastic(plastic).block();
-
-        plasticServices.deleteAllPlastics(plastic.getCardNumber()).blockLast();
-
-        Iterable<Plastic> plastics = plasticRepository.findAllByCardNumber(plastic.getCardNumber());
+        Plastic plastic1 = createPlastic();
+        Plastic plastic2 = createPlastic();
+        Plastic plastic3 = createPlastic();
 
         List<Plastic> plasticList = new ArrayList<>();
+        plasticList.add(plastic1);
+        plasticList.add(plastic2);
+        plasticList.add(plastic3);
 
-        plastics.forEach(plasticList::add);
 
-        assertEquals(0,plasticList.size());
+        CardsBasic cardsBasic = createCardBasic(UUID.randomUUID().toString().replace("-",""),plasticList);
+        cardsBasicRepository.save(cardsBasic);
+
+        plasticServices.deleteAllPlastics(cardsBasic.getCardId()).block();
+
+        CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
+
+        assertEquals(0,cardsBasic1.getPlasticList().size());
 
     }
 
@@ -194,19 +228,18 @@ class PlasticServicesImplTest {
 
 
         PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.NEW_CARD,null,null,null,null);
-        plasticUpdateDto.setCardNumber(cardsBasic.getCardNumber());
+        plasticUpdateDto.setCardId(cardsBasic.getCardId());
 
 
-        Plastic plastic1 = plasticServices.createNewPlastic(plasticUpdateDto).block();
+        CardsBasic cardsBasic1 = plasticServices.createNewPlastic(plasticUpdateDto).block();
 
-        Plastic plastic = plasticRepository.findById(plastic1.getPlasticKey()).get();
+        Plastic plastic = cardsBasic1.getPlasticList().get(0);
 
 
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.NEW_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(LocalDate.now().plusMonths(productDef.getCardsValidityMonthNew()).with(TemporalAdjusters.lastDayOfMonth()),
@@ -231,36 +264,42 @@ class PlasticServicesImplTest {
         CardBasicAddDTO cardBasicAddDTO = createCardBasicAddDTO();
         ProductDef productDef = productTable.findProductDef(cardBasicAddDTO.getOrg(),cardBasicAddDTO.getProduct());
         CardsBasic cardsBasic = cardsBasicService.convertDTOToCardBasic(cardBasicAddDTO,productDef);
-        cardsBasicRepository.save(cardsBasic);
 
         Plastic plastic1 = createPlastic();
-        plastic1.setCardNumber(cardsBasic.getCardNumber());
-        plasticRepository.save(plastic1);
         Plastic plastic2 = createPlastic();
-        plastic2.setCardNumber(cardsBasic.getCardNumber());
-        plasticRepository.save(plastic2);
-
         Plastic plastic3 = createPlastic();
-        plastic3.setCardNumber(cardsBasic.getCardNumber());
-        plasticRepository.save(plastic3);
+
+        List<Plastic> plasticList = new ArrayList<>();
+        plasticList.add(plastic1);
+        plasticList.add(plastic2);
+        plasticList.add(plastic3);
+        cardsBasic.setPlasticList(plasticList);
+
+        cardsBasicRepository.save(cardsBasic);
 
 
 
 
-        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,null,null,plastic2.getPlasticKey().getId(),null);
-        plasticUpdateDto.setCardNumber(cardsBasic.getCardNumber());
+
+        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,null,null,plastic2.getPlasticId(),null);
+        plasticUpdateDto.setCardId(cardsBasic.getCardId());
 
 
-        Plastic plastic4 = plasticServices.createNewPlastic(plasticUpdateDto).block();
+        CardsBasic cardsBasic1 = plasticServices.createNewPlastic(plasticUpdateDto).block();
 
-        Plastic plastic = plasticRepository.findById(plastic4.getPlasticKey()).get();
+        Plastic plastic = cardsBasic1.getPlasticList()
+                .stream()
+                .filter(plastic4 -> !plastic4.getPlasticId().equals(plastic1.getPlasticId()))
+                .filter(plastic4 -> !plastic4.getPlasticId().equals(plastic2.getPlasticId()))
+                .filter(plastic4 -> !plastic4.getPlasticId().equals(plastic3.getPlasticId()))
+                .findFirst().get();
 
 
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertEquals(4,cardsBasic1.getPlasticList().size()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.REPLACEMENT_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(plastic2.getExpiryDate(),
@@ -293,12 +332,11 @@ class PlasticServicesImplTest {
                 ()-> assertEquals(plastic.getCardAction(),Util.getCardAction(plasticsDTO.getCardAction())),
                 ()-> assertEquals(plastic.getCardActivated(),plasticsDTO.getCardActivated()),
                 ()-> assertEquals(plastic.getCardActivatedDate(),plasticsDTO.getCardActivatedDate()),
-                ()-> assertEquals(plastic.getCardNumber(),plasticsDTO.getCardNumber()),
                 ()-> assertEquals(plastic.getDateCardValidFrom(),plasticsDTO.getDateCardValidFrom()),
                 ()-> assertEquals(plastic.getDatePlasticIssued(),plasticsDTO.getDatePlasticIssued()),
                 ()-> assertEquals(plastic.getExpiryDate(),plasticsDTO.getExpiryDate()),
                 ()-> assertEquals(plastic.getPendingCardAction(),Util.getCardAction(plasticsDTO.getPendingCardAction())),
-                ()-> assertEquals(plastic.getPlasticKey().getId(),plasticsDTO.getId())
+                ()-> assertEquals(plastic.getPlasticId(),plasticsDTO.getPlasticId())
         );
 
     }
@@ -318,12 +356,11 @@ class PlasticServicesImplTest {
 
         PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.NEW_CARD,false,null,null,null);
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.NEW_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(LocalDate.now().plusMonths(productDef.getCardsValidityMonthNew()).with(TemporalAdjusters.lastDayOfMonth()),
@@ -356,12 +393,11 @@ class PlasticServicesImplTest {
 
         PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.NEW_CARD,false,null,null,LocalDate.of(2022,12,30));
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.NEW_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(LocalDate.of(2022,12,31),
@@ -396,12 +432,11 @@ class PlasticServicesImplTest {
 
         PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.NEW_CARD,false,null,null,LocalDate.of(2022,12,30));
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.NEW_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(LocalDate.of(2022,12,31),
@@ -435,14 +470,15 @@ class PlasticServicesImplTest {
 
         List<Plastic> plasticList = new ArrayList<>();
 
+        cardsBasic.setPlasticList(plasticList);
+
         PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.EMERGENCY_REPLACEMENT_CARD,false,30,null,null);
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.EMERGENCY_REPLACEMENT_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(LocalDate.now().plusDays(plasticUpdateDto.getEmergencyReplCardsExpiryDays()).with(TemporalAdjusters.lastDayOfMonth()),
@@ -474,14 +510,16 @@ class PlasticServicesImplTest {
 
         List<Plastic> plasticList = new ArrayList<>();
 
+        cardsBasic.setPlasticList(plasticList);
+
         PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.NO_ACTION,false,null,null,null);
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getPendingCardAction()),
                 ()-> assertEquals(LocalDate.now().plusMonths(productDef.getCardsValidityMonthNew()).with(TemporalAdjusters.lastDayOfMonth()),
@@ -524,14 +562,15 @@ class PlasticServicesImplTest {
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,false,null,plastic2.getPlasticKey().getId(),null);
+        cardsBasic.setPlasticList(plasticList);
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,false,null,plastic2.getPlasticId(),null);
+
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.REPLACEMENT_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(LocalDate.now().plusMonths(productDef.getCardsValidityMonthReplace()).with(TemporalAdjusters.lastDayOfMonth()),
@@ -572,14 +611,14 @@ class PlasticServicesImplTest {
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,false,null,plastic2.getPlasticKey().getId(),null);
+        cardsBasic.setPlasticList(plasticList);
+        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,false,null,plastic2.getPlasticId(),null);
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.REPLACEMENT_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(plastic2.getExpiryDate(),
@@ -620,14 +659,15 @@ class PlasticServicesImplTest {
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,false,null,plastic2.getPlasticKey().getId(),LocalDate.of(2025,03,31));
+        cardsBasic.setPlasticList(plasticList);
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REPLACEMENT_CARD,false,null,plastic2.getPlasticId(),LocalDate.of(2025,03,31));
+
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.REPLACEMENT_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(plastic2.getExpiryDate(),
@@ -669,14 +709,17 @@ class PlasticServicesImplTest {
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REISSUE_CARD,false,null,plastic2.getPlasticKey().getId(),null);
+        cardsBasic.setPlasticList(plasticList);
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REISSUE_CARD,false,null,plastic2.getPlasticId(),null);
+
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
+
+
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.REISSUE_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(plastic2.getExpiryDate().plusMonths(productDef.getCardsValidityMonthReIssue()).with(TemporalAdjusters.lastDayOfMonth()),
@@ -718,14 +761,15 @@ class PlasticServicesImplTest {
         plasticList.add(plastic2);
         plasticList.add(plastic3);
 
-        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REISSUE_CARD,false,null,plastic2.getPlasticKey().getId(),LocalDate.of(2023,12,2));
+        cardsBasic.setPlasticList(plasticList);
 
-        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef,plasticList);
+        PlasticUpdateDto plasticUpdateDto = createPlastic(CardAction.REISSUE_CARD,false,null,plastic2.getPlasticId(),LocalDate.of(2023,12,2));
+
+        Plastic plastic = plasticServices.updatePlastic(plasticUpdateDto,cardsBasic,productDef);
 
         long waiveActivation = cardsBasic.getWaiverDaysActivation();
         assertAll(
-                ()->assertEquals(plastic.getPlasticKey().getCardNumber(),cardsBasic.getCardNumber()),
-                ()-> assertNotNull(plastic.getPlasticKey().getId()),
+                ()-> assertNotNull(plastic.getPlasticId()),
                 ()-> assertEquals(CardAction.NO_ACTION,plastic.getCardAction()),
                 ()-> assertEquals(CardAction.REISSUE_CARD,plastic.getPendingCardAction()),
                 ()-> assertEquals(LocalDate.of(2023,12,2).with(TemporalAdjusters.lastDayOfMonth()),
@@ -745,7 +789,6 @@ class PlasticServicesImplTest {
 
     private Plastic createPlastic(){
 
-        String  cardNumber = Util.generateCardNumberFromStarter("491652996363189");
 
         return Plastic.builder()
                 .dynamicCVV(true)
@@ -753,12 +796,11 @@ class PlasticServicesImplTest {
                 .activationWaiveDuration(Duration.ofDays(10))
                 .cardActivated(true)
                 .cardActivatedDate(LocalDateTime.now())
-                .cardNumber(cardNumber)
                 .dateCardValidFrom(LocalDate.of(2020,12,02))
                 .datePlasticIssued(LocalDateTime.now())
                 .expiryDate(LocalDate.of(2022,04,30))
                 .pendingCardAction(CardAction.NEW_CARD)
-                .plasticKey(new PlasticKey(UUID.randomUUID().toString().replace("-",""),cardNumber))
+                .plasticId(UUID.randomUUID().toString().replace("-",""))
                 .build()
                 ;
     }
@@ -770,7 +812,7 @@ class PlasticServicesImplTest {
         PlasticUpdateDto.PlasticUpdateDtoBuilder builder = PlasticUpdateDto.builder()
                 .dynamicCVV(true)
                 .cardAction(Util.getCardAction(cardAction))
-                .cardNumber(cardNumber);
+                .cardId(cardNumber);
 
         if(activation != null){
             builder
@@ -846,14 +888,14 @@ class PlasticServicesImplTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
 
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSet = new HashSet<>();
@@ -907,7 +949,7 @@ class PlasticServicesImplTest {
 
 
         return CardBasicAddDTO.builder()
-                .cardNumber(Util.generateCardNumberFromStarter("491652996363189"))
+                .cardId(Util.generateCardNumberFromStarter("491652996363189"))
                 .cardholderType(Util.getCardHolderType(CardHolderType.PRIMARY))
                 .blockType(Util.getBlockType(BlockType.APPROVE))
                 .cardStatus(Util.getCardStatus(CardStatus.ACTIVE))
@@ -920,6 +962,7 @@ class PlasticServicesImplTest {
                 .build();
     }
 
+
     @Test
     void updatePlasticData() {
 
@@ -928,18 +971,26 @@ class PlasticServicesImplTest {
         plastic.setDynamicCVV(false);
         plastic.setCardActivated(false);
 
-        plasticRepository.save(plastic);
+        List<Plastic> plasticList = generatePlasticList();
+        plasticList.add(plastic);
+
+        String cardNumber = UUID.randomUUID().toString().replace("-","");
+
+        CardsBasic cardsBasic = createCardBasic(cardNumber,plasticList);
+
+        cardsBasicRepository.save(cardsBasic);
+
 
         PlasticUpdateDto plasticUpdateDto = PlasticUpdateDto.builder()
-                .plasticId(plastic.getPlasticKey().getId())
-                .cardNumber(plastic.getCardNumber())
+                .plasticId(plastic.getPlasticId())
+                .cardId(cardNumber)
                 .cardActivate(true)
                 .dynamicCVV(true)
                 .build();
 
         plasticServices.updatePlasticData(plasticUpdateDto).block();
-
-        Plastic plastic1 = plasticRepository.findById(new PlasticKey(plasticUpdateDto.getPlasticId(),plasticUpdateDto.getCardNumber())).get();
+        CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
+        Plastic plastic1 = findPlasticFromList(cardsBasic1.getPlasticList(),plastic.getPlasticId());
 
         assertAll(
                 ()-> assertTrue(plastic1.getCardActivated()),
@@ -959,17 +1010,27 @@ class PlasticServicesImplTest {
         plastic.setDynamicCVV(false);
         plastic.setCardActivated(false);
 
-        plasticRepository.save(plastic);
+        List<Plastic> plasticList = generatePlasticList();
+        plasticList.add(plastic);
+
+        String cardNumber = UUID.randomUUID().toString().replace("-","");
+
+        CardsBasic cardsBasic = createCardBasic(cardNumber,plasticList);
+
+        cardsBasicRepository.save(cardsBasic);
+
+
 
         PlasticUpdateDto plasticUpdateDto = PlasticUpdateDto.builder()
-                .plasticId(plastic.getPlasticKey().getId())
-                .cardNumber(plastic.getCardNumber())
+                .plasticId(plastic.getPlasticId())
+                .cardId(cardNumber)
                 .cardActivate(true)
                 .build();
 
         plasticServices.updatePlasticData(plasticUpdateDto).block();
 
-        Plastic plastic1 = plasticRepository.findById(new PlasticKey(plasticUpdateDto.getPlasticId(),plasticUpdateDto.getCardNumber())).get();
+        CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
+        Plastic plastic1 = findPlasticFromList(cardsBasic1.getPlasticList(),plastic.getPlasticId());
 
         assertAll(
                 ()-> assertTrue(plastic1.getCardActivated()),
@@ -989,17 +1050,27 @@ class PlasticServicesImplTest {
         plastic.setDynamicCVV(false);
         plastic.setCardActivated(false);
 
-        plasticRepository.save(plastic);
+        List<Plastic> plasticList = generatePlasticList();
+        plasticList.add(plastic);
+
+        String cardNumber = UUID.randomUUID().toString().replace("-","");
+
+        CardsBasic cardsBasic = createCardBasic(cardNumber,plasticList);
+
+        cardsBasicRepository.save(cardsBasic);
+
 
         PlasticUpdateDto plasticUpdateDto = PlasticUpdateDto.builder()
-                .plasticId(plastic.getPlasticKey().getId())
-                .cardNumber(plastic.getCardNumber())
+                .plasticId(plastic.getPlasticId())
+                .cardId(cardNumber)
                 .dynamicCVV(true)
                 .build();
 
         plasticServices.updatePlasticData(plasticUpdateDto).block();
 
-        Plastic plastic1 = plasticRepository.findById(new PlasticKey(plasticUpdateDto.getPlasticId(),plasticUpdateDto.getCardNumber())).get();
+        CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
+        Plastic plastic1 = findPlasticFromList(cardsBasic1.getPlasticList(),plastic.getPlasticId());
+
 
         assertAll(
                 ()-> assertFalse(plastic1.getCardActivated()),
@@ -1017,18 +1088,28 @@ class PlasticServicesImplTest {
         plastic.setDynamicCVV(false);
         plastic.setCardActivated(true);
 
-        plasticRepository.save(plastic);
+        List<Plastic> plasticList = generatePlasticList();
+        plasticList.add(plastic);
+
+        String cardNumber = UUID.randomUUID().toString().replace("-","");
+
+        CardsBasic cardsBasic = createCardBasic(cardNumber,plasticList);
+
+        cardsBasicRepository.save(cardsBasic);
+
+
 
         PlasticUpdateDto plasticUpdateDto = PlasticUpdateDto.builder()
-                .plasticId(plastic.getPlasticKey().getId())
-                .cardNumber(plastic.getCardNumber())
+                .plasticId(plastic.getPlasticId())
+                .cardId(cardNumber)
                 .dynamicCVV(true)
                 .cardActivate(true)
                 .build();
 
         plasticServices.updatePlasticData(plasticUpdateDto).block();
 
-        Plastic plastic1 = plasticRepository.findById(new PlasticKey(plasticUpdateDto.getPlasticId(),plasticUpdateDto.getCardNumber())).get();
+        CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
+        Plastic plastic1 = findPlasticFromList(cardsBasic1.getPlasticList(),plastic.getPlasticId());
 
         assertAll(
                 ()-> assertTrue(plastic1.getCardActivated()),
@@ -1045,18 +1126,27 @@ class PlasticServicesImplTest {
         plastic.setDynamicCVV(false);
         plastic.setCardActivated(null);
 
-        plasticRepository.save(plastic);
+        List<Plastic> plasticList = generatePlasticList();
+        plasticList.add(plastic);
+
+        String cardNumber = UUID.randomUUID().toString().replace("-","");
+
+        CardsBasic cardsBasic = createCardBasic(cardNumber,plasticList);
+
+        cardsBasicRepository.save(cardsBasic);
 
         PlasticUpdateDto plasticUpdateDto = PlasticUpdateDto.builder()
-                .plasticId(plastic.getPlasticKey().getId())
-                .cardNumber(plastic.getCardNumber())
+                .plasticId(plastic.getPlasticId())
+                .cardId(cardNumber)
                 .dynamicCVV(true)
                 .cardActivate(true)
                 .build();
 
         plasticServices.updatePlasticData(plasticUpdateDto).block();
 
-        Plastic plastic1 = plasticRepository.findById(new PlasticKey(plasticUpdateDto.getPlasticId(),plasticUpdateDto.getCardNumber())).get();
+        CardsBasic cardsBasic1 = cardsBasicRepository.findById(cardsBasic.getCardId()).get();
+        Plastic plastic1 = findPlasticFromList(cardsBasic1.getPlasticList(),plastic.getPlasticId());
+
 
         assertAll(
                 ()-> assertTrue(plastic1.getCardActivated()),
@@ -1064,5 +1154,89 @@ class PlasticServicesImplTest {
                 ()-> assertTrue(plastic1.getDynamicCVV())
         );
     }
+
+
+    private Plastic findPlasticFromList(List<Plastic> plasticList,String plasticId){
+
+        return plasticList.stream()
+                .filter(plastic -> plastic.getPlasticId().equals(plasticId))
+                .findFirst()
+                .get();
+    }
+
+
+    private CardsBasic createCardBasic(String cardId,  List<Plastic> plasticList){
+
+
+        Set<AccountDef> accountDefSet = new HashSet<>();
+
+        accountDefSet.add(AccountDef.builder()
+                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .billingCurrencyCode("484")
+                .accountType(AccountType.CREDIT)
+                .build());
+
+        accountDefSet.add(AccountDef.builder()
+                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .billingCurrencyCode("840")
+                .accountType(AccountType.CREDIT)
+                .build());
+
+
+
+
+
+        return CardsBasic.builder()
+                .cardId(cardId)
+                .cardholderType(CardHolderType.PRIMARY)
+                .blockType(BlockType.APPROVE)
+                .cardStatus(CardStatus.ACTIVE)
+                .org(001)
+                .product(201)
+                .waiverDaysActivation(10)
+                .accountDefSet(accountDefSet)
+                .customerNumber(UUID.randomUUID().toString().replace("-",""))
+                .plasticList(plasticList)
+                .build();
+    }
+
+
+    private List<Plastic> generatePlasticList(){
+
+        List<Plastic> plasticList = new ArrayList<>();
+
+        plasticList.add(
+                Plastic.builder()
+                        .plasticId(UUID.randomUUID().toString().replace("-",""))
+                        .cardActivatedDate(LocalDateTime.now())
+                        .expiryDate(LocalDate.now())
+                        .activationWaiveDuration(Duration.ofDays(10))
+                        .cardAction(CardAction.NEW_CARD)
+                        .cardActivated(true)
+                        .dynamicCVV(false)
+                        .dateCardValidFrom(LocalDate.now())
+                        .pendingCardAction(CardAction.NO_ACTION)
+                        .datePlasticIssued(LocalDateTime.now())
+                        .build()
+
+        );
+        plasticList.add(
+                Plastic.builder()
+                        .plasticId(UUID.randomUUID().toString().replace("-",""))
+                        .expiryDate(LocalDate.now())
+                        .activationWaiveDuration(Duration.ofDays(10))
+                        .cardAction(CardAction.NO_ACTION)
+                        .cardActivated(true)
+                        .dynamicCVV(false)
+                        .dateCardValidFrom(LocalDate.now())
+                        .pendingCardAction(CardAction.NEW_CARD)
+                        .build()
+
+        );
+
+        return plasticList;
+
+    }
+
 
 }

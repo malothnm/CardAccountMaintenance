@@ -38,7 +38,7 @@ public class InstrumentServiceImpl implements InstrumentService {
     public Mono<Instrument> createNewInstrument(InstrumentAddDTO instrumentAddDTO) {
 
 
-        return cardsBasicService.fetchCardInfo(instrumentAddDTO.getCardNumber())
+        return cardsBasicService.fetchCardInfo(instrumentAddDTO.getCardId())
                 .map(cardsBasic -> createInstrumentFromAddDTO(instrumentAddDTO,cardsBasic))
                 .flatMap(instrument -> instrumentDataService.saveInstrument(instrument))
 
@@ -77,8 +77,8 @@ public class InstrumentServiceImpl implements InstrumentService {
     }
 
     @Override
-    public Flux<Instrument> fetchAllInstrumentsForCard(String cardNumber) {
-        return instrumentDataService.findAllInstrumentsByCardNumber(cardNumber)
+    public Flux<Instrument> fetchAllInstrumentsForCard(String cardId) {
+        return instrumentDataService.findAllInstrumentsByCardNumber(cardId)
                 ;
 
     }
@@ -121,7 +121,7 @@ public class InstrumentServiceImpl implements InstrumentService {
         instrument.setInstrumentNumber(instrumentAddDTO.getInstrumentNumber());
         instrument.setInstrumentType(Util.getInstrumentType(instrumentAddDTO.getInstrumentType()));
         instrument.setActive(instrumentAddDTO.getActive());
-        instrument.setCardNumber(instrumentAddDTO.getCardNumber());
+        instrument.setCardNumber(instrumentAddDTO.getCardId());
 //        instrument.setAccountNumber(instrumentAddDTO.getAccountNumber());
 
         instrument.setAccountDefSet(cardsBasic.getAccountDefSet());
@@ -153,8 +153,8 @@ public class InstrumentServiceImpl implements InstrumentService {
         if(instrumentUpdateDTO.getActive() != null){
             instrument.setActive(instrumentUpdateDTO.getActive());
         }
-        if(instrumentUpdateDTO.getCardNumber() != null){
-            instrument.setCardNumber(instrumentUpdateDTO.getCardNumber());
+        if(instrumentUpdateDTO.getCardId() != null){
+            instrument.setCardNumber(instrumentUpdateDTO.getCardId());
         }
 //        if(instrumentUpdateDTO.getAccountNumber() != null){
 //            instrument.setAccountNumber(instrumentUpdateDTO.getAccountNumber());
@@ -197,7 +197,7 @@ public class InstrumentServiceImpl implements InstrumentService {
                 .map(accountDefDTO -> AccountDef.builder()
                         .accountType(Util.getAccountType(accountDefDTO.getAccountType()))
                         .billingCurrencyCode(accountDefDTO.getBillingCurrencyCode())
-                        .accountNumber(accountDefDTO.getAccountNumber())
+                        .accountNumber(accountDefDTO.getAccountId())
                         .build()
                 )
                 .forEach(accountDef -> instrument.getAccountDefSet().remove(accountDef));
@@ -210,15 +210,15 @@ public class InstrumentServiceImpl implements InstrumentService {
         InstrumentDto.InstrumentDtoBuilder instrumentDtoBuilder = InstrumentDto.builder()
                 .instrumentNumber(instrument.getInstrumentNumber())
 //                .accountNumber(instrument.getAccountNumber())
-                .cardNumber(instrument.getCardNumber())
-                .customerNumber(instrument.getCustomerNumber())
+                .cardId(instrument.getCardNumber())
+                .customerId(instrument.getCustomerNumber())
                 .instrumentType(Util.getInstrumentType(instrument.getInstrumentType()))
                 .org(instrument.getOrg())
                 .product(instrument.getProduct())
                 .active(instrument.isActive())
                 .accountDefDTOSet(instrument.getAccountDefSet().stream()
                         .map(accountDef -> AccountDefDTO.builder()
-                                .accountNumber(accountDef.getAccountNumber())
+                                .accountId(accountDef.getAccountNumber())
                                 .billingCurrencyCode(accountDef.getBillingCurrencyCode())
                                 .accountType(Util.getAccountType(accountDef.getAccountType()))
                                 .build()

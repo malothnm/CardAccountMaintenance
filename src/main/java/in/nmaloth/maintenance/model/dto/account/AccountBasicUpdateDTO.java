@@ -18,7 +18,7 @@ import java.util.Set;
 public class AccountBasicUpdateDTO {
 
     @NotNull
-    private String accountNumber;
+    private String accountId;
 
     @Pattern(regexp = "0|1|2|3|4|5|6")
     private String blockType;

@@ -9,6 +9,4 @@ public interface AccountAccumValuesDataService {
 
     Mono<AccountAccumValues> saveAccountAccumValues(AccountAccumValues accountAccumValues);
     Mono<Optional<AccountAccumValues>> findAccountAccumValuesById(String id);
-    Mono<Optional<AccountAccumValues>> findAccountAccumValuesByAcctNumber(String acctNumber);
-    Mono<Optional<AccountAccumValues>> deleteAccountAccumValuesByAcctNumber(String acctNumber);
 }

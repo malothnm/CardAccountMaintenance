@@ -1,6 +1,7 @@
 package in.nmaloth.maintenance.service.cards;
 
 import in.nmaloth.entity.BlockType;
+import in.nmaloth.entity.account.AccountDef;
 import in.nmaloth.entity.account.AccountType;
 import in.nmaloth.entity.account.BalanceTypes;
 import in.nmaloth.entity.card.*;
@@ -20,6 +21,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,44 +85,23 @@ class CardsBasicServiceImplTest {
 
         CardsBasic cardsBasic1 = cardsBasicService.createNewCardsRecord(cardBasicAddDTO).block();
         CardBasicDTO cardBasicDTO = cardsBasicService.convertToDTO(cardsBasic1);
-        CardsBasic cardsBasic =  cardsBasicRepository.findById(cardBasicDTO.getCardNumber()).get();
+        CardsBasic cardsBasic =  cardsBasicRepository.findById(cardBasicDTO.getCardId()).get();
 
-        Map<LimitType, PeriodicCardAmount> periodicMapSingle = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.SINGLE);
 
-        Map<LimitType, PeriodicCardAmount> periodicMapDaily = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.DAILY);
 
-        PeriodicCardAmount periodicCardAmountSingleNoSpecific = periodicMapSingle.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountSingleCash = periodicMapSingle.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountSingleRetail = periodicMapSingle.get(LimitType.RETAIL);
-
-        PeriodicCardAmount periodicCardAmountDailyNoSpecific = periodicMapDaily.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountDailyCash = periodicMapDaily.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountDailyRetail = periodicMapDaily.get(LimitType.RETAIL);
 
 
 
 
 
         assertAll(
-                ()-> assertEquals(cardBasicAddDTO.getCardNumber(),cardsBasic.getCardNumber()),
+                ()-> assertEquals(cardBasicAddDTO.getCardId(),cardsBasic.getCardId()),
                 ()-> assertEquals(cardBasicAddDTO.getCardholderType(),Util.getCardHolderType(cardsBasic.getCardholderType())),
                 ()-> assertEquals(cardBasicAddDTO.getBlockType(),Util.getBlockType(cardsBasic.getBlockType())),
                 ()-> assertEquals(cardBasicAddDTO.getOrg(),cardsBasic.getOrg()),
                 ()-> assertEquals(cardBasicAddDTO.getProduct(),cardsBasic.getProduct()),
                 ()-> assertEquals(cardBasicAddDTO.getWaiverDaysActivation(),cardsBasic.getWaiverDaysActivation()),
                 ()-> assertEquals(cardBasicAddDTO.getCardStatus(),Util.getCardStatus(cardsBasic.getCardStatus())),
-                ()-> assertEquals(100,periodicCardAmountSingleNoSpecific.getTransactionNumber()),
-                ()-> assertEquals(10000L,periodicCardAmountSingleNoSpecific.getTransactionAmount()),
-                ()-> assertEquals(100,periodicCardAmountDailyNoSpecific.getTransactionNumber()),
-                ()-> assertEquals(10000L,periodicCardAmountDailyNoSpecific.getTransactionAmount()),
-                ()-> assertEquals(200,periodicCardAmountSingleCash.getTransactionNumber()),
-                ()-> assertEquals(20000L,periodicCardAmountSingleCash.getTransactionAmount()),
-                ()-> assertEquals(200,periodicCardAmountDailyCash.getTransactionNumber()),
-                ()-> assertEquals(20000L,periodicCardAmountDailyCash.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountDailyRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountDailyRetail.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountSingleRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountSingleRetail.getTransactionAmount()),
                 ()-> assertNull(cardsBasic.getPrevBlockType()),
                 ()-> assertNull(cardsBasic.getDatePrevBlockCode()),
                 ()-> assertNull(cardsBasic.getDateBlockCode())
@@ -143,31 +126,9 @@ class CardsBasicServiceImplTest {
 
         CardsBasic cardBasicNew1 = cardsBasicService.updateCards(cardBasicUpdateDTO).block();
         CardBasicDTO cardBasicDTO1 = cardsBasicService.convertToDTO(cardBasicNew1);
-        CardsBasic cardsBasic = cardsBasicRepository.findById(cardBasicAddDTO.getCardNumber()).get();
-
-        Map<LimitType, PeriodicCardAmount> periodicMapSingle = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.SINGLE);
-
-        Map<LimitType, PeriodicCardAmount> periodicMapDaily = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.DAILY);
-        Map<LimitType, PeriodicCardAmount> periodicMapMonthly = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.MONTHLY);
+        CardsBasic cardsBasic = cardsBasicRepository.findById(cardBasicAddDTO.getCardId()).get();
 
 
-        PeriodicCardAmount periodicCardAmountSingleNoSpecific = periodicMapSingle.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountSingleCash = periodicMapSingle.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountSingleRetail = periodicMapSingle.get(LimitType.RETAIL);
-        PeriodicCardAmount periodicCardAmountSingleOTC = periodicMapSingle.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountSingleQuasiCash = periodicMapSingle.get(LimitType.QUASI_CASH);
-
-
-
-        PeriodicCardAmount periodicCardAmountDailyNoSpecific = periodicMapDaily.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountDailyCash = periodicMapDaily.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountDailyRetail = periodicMapDaily.get(LimitType.RETAIL);
-        PeriodicCardAmount periodicCardAmountDailyOTC = periodicMapDaily.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountDailyQuasiCash = periodicMapDaily.get(LimitType.QUASI_CASH);
-
-        PeriodicCardAmount periodicCardAmountMonthlyNoSpecific = periodicMapMonthly.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountMonthlyOTC = periodicMapMonthly.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountMonthlyQuasiCash = periodicMapMonthly.get(LimitType.QUASI_CASH);
 
 
 
@@ -179,32 +140,8 @@ class CardsBasicServiceImplTest {
                 ()-> assertEquals(cardBasicUpdateDTO.getCardsReturned(),cardsBasic.getCardReturnNumber()),
                 ()-> assertEquals(blockType,cardsBasic.getPrevBlockType()),
                 ()-> assertNull(cardsBasic.getDatePrevBlockCode()),
-                ()-> assertNotNull(cardsBasic.getDateBlockCode()),
-                ()-> assertEquals(3,periodicMapSingle.size()),
-                ()-> assertEquals(3,periodicMapDaily.size()),
-                ()-> assertEquals(3,periodicMapMonthly.size()),
-                ()-> assertNull(periodicCardAmountDailyNoSpecific),
-                ()-> assertNull(periodicCardAmountSingleNoSpecific),
-                ()-> assertNull(periodicCardAmountDailyCash),
-                ()-> assertNull(periodicCardAmountSingleCash),
-                ()-> assertEquals(600, periodicCardAmountSingleOTC.getTransactionNumber()),
-                ()-> assertEquals(60000L,periodicCardAmountSingleOTC.getTransactionAmount()),
-                ()-> assertEquals(600, periodicCardAmountDailyOTC.getTransactionNumber()),
-                ()-> assertEquals(60000L,periodicCardAmountDailyOTC.getTransactionAmount()),
-                ()-> assertEquals(600, periodicCardAmountMonthlyOTC.getTransactionNumber()),
-                ()-> assertEquals(60000L,periodicCardAmountMonthlyOTC.getTransactionAmount()),
-                ()-> assertEquals(700, periodicCardAmountSingleQuasiCash.getTransactionNumber()),
-                ()-> assertEquals(70000L,periodicCardAmountSingleQuasiCash.getTransactionAmount()),
-                ()-> assertEquals(700, periodicCardAmountDailyQuasiCash.getTransactionNumber()),
-                ()-> assertEquals(70000L,periodicCardAmountDailyQuasiCash.getTransactionAmount()),
-                ()-> assertEquals(700, periodicCardAmountMonthlyQuasiCash.getTransactionNumber()),
-                ()-> assertEquals(70000L,periodicCardAmountMonthlyQuasiCash.getTransactionAmount()),
-                ()-> assertEquals(400,periodicCardAmountMonthlyNoSpecific.getTransactionNumber()),
-                ()-> assertEquals(40000L,periodicCardAmountMonthlyNoSpecific.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountDailyRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountDailyRetail.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountSingleRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountSingleRetail.getTransactionAmount())
+                ()-> assertNotNull(cardsBasic.getDateBlockCode())
+
 
 
         );
@@ -235,7 +172,7 @@ class CardsBasicServiceImplTest {
 
         CardsBasic cardsBasic = cardsBasicService.createNewCardsRecord(cardBasicAddDTO).block();
 
-        Mono<CardsBasic> cardsBasicMono = cardsBasicService.fetchCardInfo(cardBasicAddDTO.getCardNumber());
+        Mono<CardsBasic> cardsBasicMono = cardsBasicService.fetchCardInfo(cardBasicAddDTO.getCardId());
 
         StepVerifier
                 .create(cardsBasicMono)
@@ -267,9 +204,9 @@ class CardsBasicServiceImplTest {
 
          cardsBasicService.createNewCardsRecord(cardBasicAddDTO).block();
 
-         cardsBasicService.deleteCardInfo(cardBasicAddDTO.getCardNumber()).block();
+         cardsBasicService.deleteCardInfo(cardBasicAddDTO.getCardId()).block();
 
-        Optional<CardsBasic> cardsBasicOptional = cardsBasicRepository.findById(cardBasicAddDTO.getCardNumber());
+        Optional<CardsBasic> cardsBasicOptional = cardsBasicRepository.findById(cardBasicAddDTO.getCardId());
 
         assertTrue(cardsBasicOptional.isEmpty());
 
@@ -298,22 +235,10 @@ class CardsBasicServiceImplTest {
 
         CardsBasic cardsBasic = cardsBasicService.convertDTOToCardBasic(cardBasicAddDTO,productDef);
 
-        Map<LimitType, PeriodicCardAmount> periodicMapSingle = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.SINGLE);
-
-        Map<LimitType, PeriodicCardAmount> periodicMapDaily = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.DAILY);
-
-        PeriodicCardAmount periodicCardAmountSingleNoSpecific = periodicMapSingle.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountSingleCash = periodicMapSingle.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountSingleRetail = periodicMapSingle.get(LimitType.RETAIL);
-
-        PeriodicCardAmount periodicCardAmountDailyNoSpecific = periodicMapDaily.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountDailyCash = periodicMapDaily.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountDailyRetail = periodicMapDaily.get(LimitType.RETAIL);
-
 
         String[] accountDefs1 = cardBasicAddDTO.getAccountDefDTOSet()
                 .stream()
-                .map(accountDefDTO -> accountDefDTO.getAccountNumber())
+                .map(accountDefDTO -> accountDefDTO.getAccountId())
                 .toArray(String[]::new);
 
         Arrays.sort(accountDefs1);
@@ -328,25 +253,13 @@ class CardsBasicServiceImplTest {
 
 
         assertAll(
-                ()-> assertEquals(cardBasicAddDTO.getCardNumber(),cardsBasic.getCardNumber()),
+                ()-> assertEquals(cardBasicAddDTO.getCardId(),cardsBasic.getCardId()),
                 ()-> assertEquals(cardBasicAddDTO.getCardholderType(),Util.getCardHolderType(cardsBasic.getCardholderType())),
                 ()-> assertEquals(cardBasicAddDTO.getBlockType(),Util.getBlockType(cardsBasic.getBlockType())),
                 ()-> assertEquals(cardBasicAddDTO.getOrg(),cardsBasic.getOrg()),
                 ()-> assertEquals(cardBasicAddDTO.getProduct(),cardsBasic.getProduct()),
                 ()-> assertEquals(cardBasicAddDTO.getWaiverDaysActivation(),cardsBasic.getWaiverDaysActivation()),
                 ()-> assertEquals(cardBasicAddDTO.getCardStatus(),Util.getCardStatus(cardsBasic.getCardStatus())),
-                ()-> assertEquals(100,periodicCardAmountSingleNoSpecific.getTransactionNumber()),
-                ()-> assertEquals(10000L,periodicCardAmountSingleNoSpecific.getTransactionAmount()),
-                ()-> assertEquals(100,periodicCardAmountDailyNoSpecific.getTransactionNumber()),
-                ()-> assertEquals(10000L,periodicCardAmountDailyNoSpecific.getTransactionAmount()),
-                ()-> assertEquals(200,periodicCardAmountSingleCash.getTransactionNumber()),
-                ()-> assertEquals(20000L,periodicCardAmountSingleCash.getTransactionAmount()),
-                ()-> assertEquals(200,periodicCardAmountDailyCash.getTransactionNumber()),
-                ()-> assertEquals(20000L,periodicCardAmountDailyCash.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountDailyRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountDailyRetail.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountSingleRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountSingleRetail.getTransactionAmount()),
                 ()-> assertNull(cardsBasic.getPrevBlockType()),
                 ()-> assertNull(cardsBasic.getDatePrevBlockCode()),
                 ()-> assertNull(cardsBasic.getDateBlockCode()),
@@ -373,7 +286,7 @@ class CardsBasicServiceImplTest {
 
         String[] accountDefs1 = cardBasicAddDTO.getAccountDefDTOSet()
                 .stream()
-                .map(accountDefDTO -> accountDefDTO.getAccountNumber())
+                .map(accountDefDTO -> accountDefDTO.getAccountId())
                 .toArray(String[]::new);
 
         Arrays.sort(accountDefs1);
@@ -386,7 +299,7 @@ class CardsBasicServiceImplTest {
         Arrays.sort(accountDefs);
 
         assertAll(
-                ()-> assertEquals(cardBasicAddDTO.getCardNumber(),cardsBasic.getCardNumber()),
+                ()-> assertEquals(cardBasicAddDTO.getCardId(),cardsBasic.getCardId()),
                 ()-> assertEquals(cardBasicAddDTO.getCardholderType(),Util.getCardHolderType(cardsBasic.getCardholderType())),
                 ()-> assertEquals(cardBasicAddDTO.getBlockType(),Util.getBlockType(cardsBasic.getBlockType())),
                 ()-> assertEquals(cardBasicAddDTO.getOrg(),cardsBasic.getOrg()),
@@ -417,7 +330,7 @@ class CardsBasicServiceImplTest {
 
         String[] accountDefs1 = cardBasicAddDTO.getAccountDefDTOSet()
                 .stream()
-                .map(accountDefDTO -> accountDefDTO.getAccountNumber())
+                .map(accountDefDTO -> accountDefDTO.getAccountId())
                 .toArray(String[]::new);
 
         Arrays.sort(accountDefs1);
@@ -430,21 +343,10 @@ class CardsBasicServiceImplTest {
         Arrays.sort(accountDefs);
 
 
-        CardLimitsDTO cardLimitDTOSingleNoSpecific =
-                evaluateperiodTypeLimitType(cardBasicDTO.getPeriodicCardLimitDTOList(),PeriodicType.SINGLE,LimitType.NO_SPECIFIC);
-        CardLimitsDTO cardLimitDTOSingleCash =
-                evaluateperiodTypeLimitType(cardBasicDTO.getPeriodicCardLimitDTOList(),PeriodicType.SINGLE,LimitType.CASH);
-        CardLimitsDTO cardLimitDTOSingleRetail =
-                evaluateperiodTypeLimitType(cardBasicDTO.getPeriodicCardLimitDTOList(),PeriodicType.SINGLE,LimitType.RETAIL);
-        CardLimitsDTO cardLimitDTODailyNoSpecific =
-                evaluateperiodTypeLimitType(cardBasicDTO.getPeriodicCardLimitDTOList(),PeriodicType.DAILY,LimitType.NO_SPECIFIC);
-        CardLimitsDTO cardLimitDTODailyCash =
-                evaluateperiodTypeLimitType(cardBasicDTO.getPeriodicCardLimitDTOList(),PeriodicType.DAILY,LimitType.CASH);
-        CardLimitsDTO cardLimitDTODailyRetail =
-                evaluateperiodTypeLimitType(cardBasicDTO.getPeriodicCardLimitDTOList(),PeriodicType.DAILY,LimitType.RETAIL);
+
 
         assertAll(
-                ()-> assertEquals(cardsBasic.getCardNumber(),cardBasicDTO.getCardNumber()),
+                ()-> assertEquals(cardsBasic.getCardId(),cardBasicDTO.getCardId()),
                 ()-> assertEquals(cardsBasic.getCardholderType(),Util.getCardHolderType(cardBasicDTO.getCardholderType())),
                 ()-> assertEquals(cardsBasic.getBlockType(),Util.getBlockType(cardBasicDTO.getBlockType())),
                 ()-> assertEquals(cardsBasic.getOrg(),cardBasicDTO.getOrg()),
@@ -454,18 +356,6 @@ class CardsBasicServiceImplTest {
                 ()-> assertNull(cardBasicDTO.getPrevBlockType()),
                 ()-> assertNull(cardBasicDTO.getDatePrevBlockCode()),
                 ()-> assertNull(cardBasicDTO.getDateBlockCode()),
-                ()-> assertEquals(100,cardLimitDTOSingleNoSpecific.getLimitNumber()),
-                ()-> assertEquals(10000L,cardLimitDTOSingleNoSpecific.getLimitAmount()),
-                ()-> assertEquals(100,cardLimitDTODailyNoSpecific.getLimitNumber()),
-                ()-> assertEquals(10000L,cardLimitDTODailyNoSpecific.getLimitAmount()),
-                ()-> assertEquals(200,cardLimitDTOSingleCash.getLimitNumber()),
-                ()-> assertEquals(20000L,cardLimitDTOSingleCash.getLimitAmount()),
-                ()-> assertEquals(200,cardLimitDTODailyCash.getLimitNumber()),
-                ()-> assertEquals(20000L,cardLimitDTODailyCash.getLimitAmount()),
-                ()-> assertEquals(300,cardLimitDTODailyRetail.getLimitNumber()),
-                ()-> assertEquals(30000L,cardLimitDTODailyRetail.getLimitAmount()),
-                ()-> assertEquals(300,cardLimitDTOSingleRetail.getLimitNumber()),
-                ()-> assertEquals(30000L,cardLimitDTOSingleRetail.getLimitAmount()),
                 ()-> assertEquals(cardBasicAddDTO.getCustomerNumber(),cardsBasic.getCustomerNumber()),
                 ()-> assertArrayEquals(accountDefs,accountDefs1)
 
@@ -475,25 +365,97 @@ class CardsBasicServiceImplTest {
 
     }
 
-    private CardLimitsDTO evaluateperiodTypeLimitType(List<PeriodicCardLimitDTO> periodicCardLimitDTOList,
-                                                             PeriodicType periodicType, LimitType limitType) {
+    @Test
+    void convertToDTO1() {
 
-        Optional<PeriodicCardLimitDTO> periodicCardLimitDTOOptional = periodicCardLimitDTOList.stream()
-                .filter(periodicCardLimitDTO -> periodicCardLimitDTO.getPeriodicType().equals(Util.getPeriodicType(periodicType)))
-                .findFirst();
+        String cardId = UUID.randomUUID().toString().replace("-","");
 
-        if(periodicCardLimitDTOOptional.isEmpty()){
-            return null;
-        }
-        Optional<CardLimitsDTO> cardLimitsDTOOptional = periodicCardLimitDTOOptional.get().getCardLimitsDTOList()
+
+        Set<AccountDef> accountDefSet = new HashSet<>();
+
+        accountDefSet.add(AccountDef.builder()
+                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .billingCurrencyCode("484")
+                .accountType(AccountType.CREDIT)
+                .build());
+
+        accountDefSet.add(AccountDef.builder()
+                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .billingCurrencyCode("840")
+                .accountType(AccountType.CREDIT)
+                .build());
+
+
+
+        List<Plastic> plasticList = new ArrayList<>();
+
+        plasticList.add(
+                Plastic.builder()
+                        .plasticId(UUID.randomUUID().toString().replace("-",""))
+                        .cardActivatedDate(LocalDateTime.now())
+                        .expiryDate(LocalDate.now())
+                        .activationWaiveDuration(Duration.ofDays(10))
+                        .cardAction(CardAction.NEW_CARD)
+                        .cardActivated(true)
+                        .dynamicCVV(false)
+                        .dateCardValidFrom(LocalDate.now())
+                        .pendingCardAction(CardAction.NO_ACTION)
+                        .datePlasticIssued(LocalDateTime.now())
+                        .build()
+
+        );
+        plasticList.add(
+                Plastic.builder()
+                        .plasticId(UUID.randomUUID().toString().replace("-",""))
+                        .expiryDate(LocalDate.now())
+                        .activationWaiveDuration(Duration.ofDays(10))
+                        .cardAction(CardAction.NO_ACTION)
+                        .cardActivated(true)
+                        .dynamicCVV(false)
+                        .dateCardValidFrom(LocalDate.now())
+                        .pendingCardAction(CardAction.NEW_CARD)
+                        .build()
+
+        );
+
+
+        CardsBasic cardsBasic = createCardBasic(cardId,accountDefSet,plasticList);
+
+        CardBasicDTO cardBasicDTO = cardsBasicService.convertToDTO(cardsBasic);
+
+        String[] accountDefs1 = cardBasicDTO.getAccountDefDTOSet()
                 .stream()
-                .filter(cardLimitsDTO -> cardLimitsDTO.getLimitType().equals(Util.getLimitType(limitType)))
-                .findFirst();
+                .map(accountDefDTO -> accountDefDTO.getAccountId())
+                .toArray(String[]::new);
 
-        if(cardLimitsDTOOptional.isEmpty()){
-            return null;
-        }
-        return cardLimitsDTOOptional.get();
+        Arrays.sort(accountDefs1);
+
+        String[] accountDefs = cardsBasic.getAccountDefSet()
+                .stream()
+                .map(accountDef -> accountDef.getAccountNumber())
+                .toArray(String[]::new);
+
+        Arrays.sort(accountDefs);
+
+
+
+
+        assertAll(
+                ()-> assertEquals(cardsBasic.getCardId(),cardBasicDTO.getCardId()),
+                ()-> assertEquals(cardsBasic.getCardholderType(),Util.getCardHolderType(cardBasicDTO.getCardholderType())),
+                ()-> assertEquals(cardsBasic.getBlockType(),Util.getBlockType(cardBasicDTO.getBlockType())),
+                ()-> assertEquals(cardsBasic.getOrg(),cardBasicDTO.getOrg()),
+                ()-> assertEquals(cardsBasic.getProduct(),cardBasicDTO.getProduct()),
+                ()-> assertEquals(cardsBasic.getWaiverDaysActivation(),cardBasicDTO.getWaiverDaysActivation()),
+                ()-> assertEquals(cardsBasic.getCardStatus(),Util.getCardStatus(cardBasicDTO.getCardStatus())),
+                ()-> assertNull(cardBasicDTO.getPrevBlockType()),
+                ()-> assertNull(cardBasicDTO.getDatePrevBlockCode()),
+                ()-> assertNull(cardBasicDTO.getDateBlockCode()),
+                ()-> assertEquals(cardsBasic.getCustomerNumber(),cardBasicDTO.getCustomerNumber()),
+                ()-> assertEquals(2, cardBasicDTO.getPlasticsDTOList().size()),
+                ()-> assertArrayEquals(accountDefs,accountDefs1)
+
+        );
 
 
     }
@@ -516,30 +478,6 @@ class CardsBasicServiceImplTest {
         CardsBasic cardsBasic1 = cardsBasicService.updateCardBasicFromDTO(cardBasicUpdateDTO,productDef,cardsBasic);
 
 
-        Map<LimitType, PeriodicCardAmount> periodicMapSingle = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.SINGLE);
-
-        Map<LimitType, PeriodicCardAmount> periodicMapDaily = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.DAILY);
-        Map<LimitType, PeriodicCardAmount> periodicMapMonthly = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.MONTHLY);
-
-
-        PeriodicCardAmount periodicCardAmountSingleNoSpecific = periodicMapSingle.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountSingleCash = periodicMapSingle.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountSingleRetail = periodicMapSingle.get(LimitType.RETAIL);
-        PeriodicCardAmount periodicCardAmountSingleOTC = periodicMapSingle.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountSingleQuasiCash = periodicMapSingle.get(LimitType.QUASI_CASH);
-
-
-
-        PeriodicCardAmount periodicCardAmountDailyNoSpecific = periodicMapDaily.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountDailyCash = periodicMapDaily.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountDailyRetail = periodicMapDaily.get(LimitType.RETAIL);
-        PeriodicCardAmount periodicCardAmountDailyOTC = periodicMapDaily.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountDailyQuasiCash = periodicMapDaily.get(LimitType.QUASI_CASH);
-
-        PeriodicCardAmount periodicCardAmountMonthlyNoSpecific = periodicMapMonthly.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountMonthlyOTC = periodicMapMonthly.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountMonthlyQuasiCash = periodicMapMonthly.get(LimitType.QUASI_CASH);
-
 
 
         assertAll(
@@ -551,31 +489,6 @@ class CardsBasicServiceImplTest {
                 ()-> assertEquals(blockType,cardsBasic.getPrevBlockType()),
                 ()-> assertNull(cardsBasic.getDatePrevBlockCode()),
                 ()-> assertNotNull(cardsBasic.getDateBlockCode()),
-                ()-> assertEquals(3,periodicMapSingle.size()),
-                ()-> assertEquals(3,periodicMapDaily.size()),
-                ()-> assertEquals(3,periodicMapMonthly.size()),
-                ()-> assertNull(periodicCardAmountDailyNoSpecific),
-                ()-> assertNull(periodicCardAmountSingleNoSpecific),
-                ()-> assertNull(periodicCardAmountDailyCash),
-                ()-> assertNull(periodicCardAmountSingleCash),
-                ()-> assertEquals(600, periodicCardAmountSingleOTC.getTransactionNumber()),
-                ()-> assertEquals(60000L,periodicCardAmountSingleOTC.getTransactionAmount()),
-                ()-> assertEquals(600, periodicCardAmountDailyOTC.getTransactionNumber()),
-                ()-> assertEquals(60000L,periodicCardAmountDailyOTC.getTransactionAmount()),
-                ()-> assertEquals(600, periodicCardAmountMonthlyOTC.getTransactionNumber()),
-                ()-> assertEquals(60000L,periodicCardAmountMonthlyOTC.getTransactionAmount()),
-                ()-> assertEquals(700, periodicCardAmountSingleQuasiCash.getTransactionNumber()),
-                ()-> assertEquals(70000L,periodicCardAmountSingleQuasiCash.getTransactionAmount()),
-                ()-> assertEquals(700, periodicCardAmountDailyQuasiCash.getTransactionNumber()),
-                ()-> assertEquals(70000L,periodicCardAmountDailyQuasiCash.getTransactionAmount()),
-                ()-> assertEquals(700, periodicCardAmountMonthlyQuasiCash.getTransactionNumber()),
-                ()-> assertEquals(70000L,periodicCardAmountMonthlyQuasiCash.getTransactionAmount()),
-                ()-> assertEquals(400,periodicCardAmountMonthlyNoSpecific.getTransactionNumber()),
-                ()-> assertEquals(40000L,periodicCardAmountMonthlyNoSpecific.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountDailyRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountDailyRetail.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountSingleRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountSingleRetail.getTransactionAmount()),
                 ()-> assertEquals(cardBasicUpdateDTO.getCustomerNumber(), cardsBasic.getCustomerNumber()),
                 ()-> assertEquals(4,cardsBasic.getAccountDefSet().size())
 
@@ -604,30 +517,6 @@ class CardsBasicServiceImplTest {
         CardsBasic cardsBasic1 = cardsBasicService.updateCardBasicFromDTO(cardBasicUpdateDTO,productDef,cardsBasic);
 
 
-        Map<LimitType, PeriodicCardAmount> periodicMapSingle = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.SINGLE);
-        Map<LimitType, PeriodicCardAmount> periodicMapDaily = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.DAILY);
-        Map<LimitType, PeriodicCardAmount> periodicMapMonthly = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.MONTHLY);
-
-
-        PeriodicCardAmount periodicCardAmountSingleNoSpecific = periodicMapSingle.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountSingleCash = periodicMapSingle.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountSingleRetail = periodicMapSingle.get(LimitType.RETAIL);
-        PeriodicCardAmount periodicCardAmountSingleOTC = periodicMapSingle.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountSingleQuasiCash = periodicMapSingle.get(LimitType.QUASI_CASH);
-
-
-
-        PeriodicCardAmount periodicCardAmountDailyNoSpecific = periodicMapDaily.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountDailyCash = periodicMapDaily.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountDailyRetail = periodicMapDaily.get(LimitType.RETAIL);
-        PeriodicCardAmount periodicCardAmountDailyOTC = periodicMapDaily.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountDailyQuasiCash = periodicMapDaily.get(LimitType.QUASI_CASH);
-
-        PeriodicCardAmount periodicCardAmountMonthlyNoSpecific = periodicMapMonthly.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountMonthlyOTC = periodicMapMonthly.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountMonthlyQuasiCash = periodicMapMonthly.get(LimitType.QUASI_CASH);
-
-
 
         assertAll(
                 ()-> assertEquals(cardBasicUpdateDTO.getCardHolderType(),Util.getCardHolderType(cardsBasic.getCardholderType())),
@@ -638,31 +527,6 @@ class CardsBasicServiceImplTest {
                 ()-> assertEquals(blockType,cardsBasic.getPrevBlockType()),
                 ()-> assertNull(cardsBasic.getDatePrevBlockCode()),
                 ()-> assertNotNull(cardsBasic.getDateBlockCode()),
-                ()-> assertEquals(5,periodicMapSingle.size()),
-                ()-> assertEquals(5,periodicMapDaily.size()),
-                ()-> assertEquals(3,periodicMapMonthly.size()),
-                ()-> assertEquals(400,periodicCardAmountDailyNoSpecific.getTransactionNumber()),
-                ()-> assertEquals(40000L,periodicCardAmountSingleNoSpecific.getTransactionAmount()),
-                ()-> assertEquals(200,periodicCardAmountDailyCash.getTransactionNumber()),
-                ()-> assertEquals(20000L,periodicCardAmountSingleCash.getTransactionAmount()),
-                ()-> assertEquals(600, periodicCardAmountSingleOTC.getTransactionNumber()),
-                ()-> assertEquals(60000L,periodicCardAmountSingleOTC.getTransactionAmount()),
-                ()-> assertEquals(600, periodicCardAmountDailyOTC.getTransactionNumber()),
-                ()-> assertEquals(60000L,periodicCardAmountDailyOTC.getTransactionAmount()),
-                ()-> assertEquals(600, periodicCardAmountMonthlyOTC.getTransactionNumber()),
-                ()-> assertEquals(60000L,periodicCardAmountMonthlyOTC.getTransactionAmount()),
-                ()-> assertEquals(700, periodicCardAmountSingleQuasiCash.getTransactionNumber()),
-                ()-> assertEquals(70000L,periodicCardAmountSingleQuasiCash.getTransactionAmount()),
-                ()-> assertEquals(700, periodicCardAmountDailyQuasiCash.getTransactionNumber()),
-                ()-> assertEquals(70000L,periodicCardAmountDailyQuasiCash.getTransactionAmount()),
-                ()-> assertEquals(700, periodicCardAmountMonthlyQuasiCash.getTransactionNumber()),
-                ()-> assertEquals(70000L,periodicCardAmountMonthlyQuasiCash.getTransactionAmount()),
-                ()-> assertEquals(400,periodicCardAmountMonthlyNoSpecific.getTransactionNumber()),
-                ()-> assertEquals(40000L,periodicCardAmountMonthlyNoSpecific.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountDailyRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountDailyRetail.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountSingleRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountSingleRetail.getTransactionAmount()),
                 ()-> assertEquals(1,cardsBasic.getAccountDefSet().size())
 
 
@@ -688,26 +552,6 @@ class CardsBasicServiceImplTest {
         CardsBasic cardsBasic1 = cardsBasicService.updateCardBasicFromDTO(cardBasicUpdateDTO,productDef,cardsBasic);
 
 
-        Map<LimitType, PeriodicCardAmount> periodicMapSingle = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.SINGLE);
-        Map<LimitType, PeriodicCardAmount> periodicMapDaily = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.DAILY);
-        Map<LimitType, PeriodicCardAmount> periodicMapMonthly = cardsBasic.getPeriodicTypePeriodicCardLimitMap().get(PeriodicType.MONTHLY);
-
-
-        PeriodicCardAmount periodicCardAmountSingleNoSpecific = periodicMapSingle.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountSingleCash = periodicMapSingle.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountSingleRetail = periodicMapSingle.get(LimitType.RETAIL);
-        PeriodicCardAmount periodicCardAmountSingleOTC = periodicMapSingle.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountSingleQuasiCash = periodicMapSingle.get(LimitType.QUASI_CASH);
-
-
-
-        PeriodicCardAmount periodicCardAmountDailyNoSpecific = periodicMapDaily.get(LimitType.NO_SPECIFIC);
-        PeriodicCardAmount periodicCardAmountDailyCash = periodicMapDaily.get(LimitType.CASH);
-        PeriodicCardAmount periodicCardAmountDailyRetail = periodicMapDaily.get(LimitType.RETAIL);
-        PeriodicCardAmount periodicCardAmountDailyOTC = periodicMapDaily.get(LimitType.OTC);
-        PeriodicCardAmount periodicCardAmountDailyQuasiCash = periodicMapDaily.get(LimitType.QUASI_CASH);
-
-
 
 
         assertAll(
@@ -719,15 +563,6 @@ class CardsBasicServiceImplTest {
                 ()-> assertNull(cardsBasic.getPrevBlockType()),
                 ()-> assertNull(cardsBasic.getDatePrevBlockCode()),
                 ()-> assertNull(cardsBasic.getDateBlockCode()),
-                ()-> assertEquals(1,periodicMapSingle.size()),
-                ()-> assertEquals(1,periodicMapDaily.size()),
-                ()-> assertNull(periodicMapMonthly),
-                ()-> assertNull(periodicCardAmountDailyNoSpecific),
-                ()-> assertNull(periodicCardAmountSingleNoSpecific),
-                ()-> assertEquals(300,periodicCardAmountDailyRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountDailyRetail.getTransactionAmount()),
-                ()-> assertEquals(300,periodicCardAmountSingleRetail.getTransactionNumber()),
-                ()-> assertEquals(30000L,periodicCardAmountSingleRetail.getTransactionAmount()),
                 ()-> assertEquals(cardBasicUpdateDTO.getCustomerNumber(),cardsBasic.getCustomerNumber()),
                 ()-> assertEquals(5,cardsBasic.getAccountDefSet().size())
 
@@ -743,14 +578,14 @@ class CardsBasicServiceImplTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
 
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(deleteAccountNumber)
+                .accountId(deleteAccountNumber)
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSet = new HashSet<>();
@@ -804,7 +639,7 @@ class CardsBasicServiceImplTest {
 
 
         return CardBasicAddDTO.builder()
-                .cardNumber(Util.generateCardNumberFromStarter("491652996363189"))
+                .cardId(Util.generateCardNumberFromStarter("491652996363189"))
                 .cardholderType(Util.getCardHolderType(CardHolderType.PRIMARY))
                 .blockType(Util.getBlockType(BlockType.APPROVE))
                 .cardStatus(Util.getCardStatus(CardStatus.ACTIVE))
@@ -820,7 +655,7 @@ class CardsBasicServiceImplTest {
     private CardBasicUpdateDTO createCardBasic(boolean allFields, List<Integer> integerList,String deleteAccountNumber){
 
         CardBasicUpdateDTO.CardBasicUpdateDTOBuilder builder = CardBasicUpdateDTO.builder()
-                .cardNumber(Util.generateCardNumberFromStarter("491652996363189"));
+                .cardId(Util.generateCardNumberFromStarter("491652996363189"));
 
         List<PeriodicCardLimitDTO> periodicCardLimitDTOList = new ArrayList<>();
         List<PeriodicCardLimitDTO> periodicCardLimitDTOListDelete = new ArrayList<>();
@@ -904,24 +739,24 @@ class CardsBasicServiceImplTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO2 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CREDIT))
                 .billingCurrencyCode("840")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
         AccountDefDTO accountDefDTO3 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CURRENT))
                 .billingCurrencyCode("484")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(deleteAccountNumber)
+                .accountId(deleteAccountNumber)
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSetAdd = new HashSet<>();
@@ -965,24 +800,24 @@ class CardsBasicServiceImplTest {
         AccountDefDTO accountDefDTO1 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.SAVINGS))
                 .billingCurrencyCode("124")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO2 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CREDIT))
                 .billingCurrencyCode("840")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
         AccountDefDTO accountDefDTO3 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.CURRENT))
                 .billingCurrencyCode("484")
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .build();
 
         AccountDefDTO accountDefDTO4 = AccountDefDTO.builder()
                 .accountType(Util.getAccountType(AccountType.UNIVERSAL))
                 .billingCurrencyCode("840")
-                .accountNumber(deleteAccountNumber)
+                .accountId(deleteAccountNumber)
                 .build();
 
         Set<AccountDefDTO> accountDefDTOSetAdd = new HashSet<>();
@@ -1060,5 +895,26 @@ class CardsBasicServiceImplTest {
                 .build();
 
     }
+
+    private CardsBasic createCardBasic(String cardId,Set<AccountDef> accountDefSet,List<Plastic> plasticList){
+
+
+
+
+        return CardsBasic.builder()
+                .cardId(cardId)
+                .cardholderType(CardHolderType.PRIMARY)
+                .blockType(BlockType.APPROVE)
+                .cardStatus(CardStatus.ACTIVE)
+                .org(001)
+                .product(201)
+                .waiverDaysActivation(10)
+                .accountDefSet(accountDefSet)
+                .customerNumber(UUID.randomUUID().toString().replace("-",""))
+                .plasticList(plasticList)
+                .build();
+    }
+
+
 
 }

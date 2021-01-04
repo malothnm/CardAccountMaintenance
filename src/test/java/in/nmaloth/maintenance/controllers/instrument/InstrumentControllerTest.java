@@ -17,22 +17,18 @@ import in.nmaloth.entity.product.ProductDef;
 import in.nmaloth.entity.product.ProductId;
 import in.nmaloth.maintenance.config.data.ProductTable;
 import in.nmaloth.maintenance.controllers.EndPoints;
-import in.nmaloth.maintenance.model.dto.account.AccountDefDTO;
-import in.nmaloth.maintenance.model.dto.card.*;
 import in.nmaloth.maintenance.model.dto.instrument.InstrumentAddDTO;
 import in.nmaloth.maintenance.model.dto.instrument.InstrumentDto;
 import in.nmaloth.maintenance.model.dto.instrument.InstrumentUpdateDTO;
 import in.nmaloth.maintenance.repository.account.AccountBasicRepository;
 import in.nmaloth.maintenance.repository.card.CardAccumulatedValuesRepository;
 import in.nmaloth.maintenance.repository.card.CardsBasicRepository;
-import in.nmaloth.maintenance.repository.card.PlasticRepository;
 import in.nmaloth.maintenance.repository.customer.CustomerRepository;
 import in.nmaloth.maintenance.repository.instrument.InstrumentRepository;
 import in.nmaloth.maintenance.repository.product.ProductCardGenRepository;
 import in.nmaloth.maintenance.repository.product.ProductDefRepository;
 import in.nmaloth.maintenance.service.cards.CardAccumValuesService;
 import in.nmaloth.maintenance.util.Util;
-import org.apache.geode.cache.client.internal.Op;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +38,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-import javax.swing.text.html.Option;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -68,8 +63,6 @@ class InstrumentControllerTest {
     private InstrumentRepository instrumentRepository;
 
 
-    @Autowired
-    private PlasticRepository plasticRepository;
 
     @Autowired
     private CardsBasicRepository cardsBasicRepository;
@@ -112,9 +105,6 @@ class InstrumentControllerTest {
         cardsBasicRepository.findAll()
                 .forEach(cardsBasic -> cardsBasicRepository.delete(cardsBasic));
 
-        plasticRepository.findAll()
-                .forEach(plastic -> plasticRepository.delete(plastic));
-
         instrumentRepository.findAll()
                 .forEach(instrument -> instrumentRepository.delete(instrument));
 
@@ -132,7 +122,7 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true, cardsBasic.getCardNumber(),
+        InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true, cardsBasic.getCardId(),
                 cardsBasic.getOrg(),cardsBasic.getProduct() );
 
         webTestClient.post()
@@ -148,7 +138,7 @@ class InstrumentControllerTest {
                     assertAll(
                             () -> assertEquals(instrument.getInstrumentNumber(), instrumentDto.getInstrumentNumber()),
 //                () -> assertEquals(instrument.getAccountNumber(), instrumentDto.getAccountNumber()),
-                            () -> assertEquals(instrumentAddDTO.getCardNumber(), instrument.getCardNumber()),
+                            () -> assertEquals(instrumentAddDTO.getCardId(), instrument.getCardNumber()),
                             () -> assertEquals(cardsBasic.getCustomerNumber(), instrument.getCustomerNumber()),
                             () -> assertEquals(cardsBasic.getCorporateNumber(), instrument.getCorporateNumber()),
                             () -> assertEquals(Util.getBlockType(instrumentAddDTO.getBlockType()), instrument.getBlockType()),
@@ -170,7 +160,7 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true, cardsBasic.getCardNumber(),
+        InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true, cardsBasic.getCardId(),
                 cardsBasic.getOrg(),cardsBasic.getProduct() );
 
         instrumentAddDTO.setInstrumentNumber(null);
@@ -189,7 +179,7 @@ class InstrumentControllerTest {
                             ()-> assertNotNull(instrumentDto.getInstrumentNumber()),
 //                            () -> assertEquals(instrument.getInstrumentNumber(), instrumentDto.getInstrumentNumber()),
 //                () -> assertEquals(instrument.getAccountNumber(), instrumentDto.getAccountNumber()),
-                            () -> assertEquals(instrumentAddDTO.getCardNumber(), instrument.getCardNumber()),
+                            () -> assertEquals(instrumentAddDTO.getCardId(), instrument.getCardNumber()),
                             () -> assertEquals(cardsBasic.getCustomerNumber(), instrument.getCustomerNumber()),
                             () -> assertEquals(cardsBasic.getCorporateNumber(), instrument.getCorporateNumber()),
                             () -> assertEquals(Util.getBlockType(instrumentAddDTO.getBlockType()), instrument.getBlockType()),
@@ -211,7 +201,7 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
 //        cardsBasicRepository.save(cardsBasic);
 
-        InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true, cardsBasic.getCardNumber(),
+        InstrumentAddDTO instrumentAddDTO = createAddInstrumentDTO(true, cardsBasic.getCardId(),
                 cardsBasic.getOrg(),cardsBasic.getProduct() );
 
         instrumentAddDTO.setInstrumentNumber(null);
@@ -233,7 +223,7 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        Instrument instrument = createInstrument(cardsBasic.getCardNumber(),cardsBasic.getCustomerNumber(),null,accountDefSet);
+        Instrument instrument = createInstrument(cardsBasic.getCardId(),cardsBasic.getCustomerNumber(),null,accountDefSet);
         instrumentRepository.save(instrument);
 
         String uri = EndPoints.INSTRUMENT_NBR.replace("{instrumentNumber}",instrument.getInstrumentNumber());
@@ -259,7 +249,7 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        Instrument instrument = createInstrument(cardsBasic.getCardNumber(),cardsBasic.getCustomerNumber(),null,accountDefSet);
+        Instrument instrument = createInstrument(cardsBasic.getCardId(),cardsBasic.getCustomerNumber(),null,accountDefSet);
 //        instrumentRepository.save(instrument);
 
         String uri = EndPoints.INSTRUMENT_NBR.replace("{instrumentNumber}",instrument.getInstrumentNumber());
@@ -282,7 +272,7 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        Instrument instrument = createInstrument(cardsBasic.getCardNumber(),cardsBasic.getCustomerNumber(),null,accountDefSet);
+        Instrument instrument = createInstrument(cardsBasic.getCardId(),cardsBasic.getCustomerNumber(),null,accountDefSet);
         instrumentRepository.save(instrument);
 
         String uri = EndPoints.INSTRUMENT_NBR.replace("{instrumentNumber}",instrument.getInstrumentNumber());
@@ -307,7 +297,7 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        Instrument instrument = createInstrument(cardsBasic.getCardNumber(),cardsBasic.getCustomerNumber(),null,accountDefSet);
+        Instrument instrument = createInstrument(cardsBasic.getCardId(),cardsBasic.getCustomerNumber(),null,accountDefSet);
         instrument.setInstrumentType(InstrumentType.PLASTIC_DEBIT);
         instrumentRepository.save(instrument);
 
@@ -345,7 +335,7 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        Instrument instrument = createInstrument(cardsBasic.getCardNumber(),cardsBasic.getCustomerNumber(),null,accountDefSet);
+        Instrument instrument = createInstrument(cardsBasic.getCardId(),cardsBasic.getCustomerNumber(),null,accountDefSet);
         instrument.setInstrumentType(InstrumentType.PLASTIC_DEBIT);
 //        instrumentRepository.save(instrument);
 
@@ -374,12 +364,12 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        Instrument[] instruments = createInstruments(4,cardsBasic.getCardNumber(),cardsBasic.getCustomerNumber(),
+        Instrument[] instruments = createInstruments(4,cardsBasic.getCardId(),cardsBasic.getCustomerNumber(),
                 null, accountDefSet);
 
         instrumentRepository.saveAll(Arrays.asList(instruments));
 
-        String uri = EndPoints.CARD_INSTRUMENT.replace("{cardNumber}", cardsBasic.getCardNumber());
+        String uri = EndPoints.CARD_INSTRUMENT.replace("{cardNumber}", cardsBasic.getCardId());
 
         webTestClient.get()
                 .uri(uri)
@@ -390,7 +380,7 @@ class InstrumentControllerTest {
                 .consumeWith(listEntityExchangeResult -> {
                     List<InstrumentDto> instrumentDtoList = listEntityExchangeResult.getResponseBody();
 
-                    assertEquals(cardsBasic.getCardNumber(),instrumentDtoList.get(0).getCardNumber());
+                    assertEquals(cardsBasic.getCardId(),instrumentDtoList.get(0).getCardId());
                 });
 
     }
@@ -401,12 +391,12 @@ class InstrumentControllerTest {
         CardsBasic cardsBasic = createCardBasic(accountDefSet);
         cardsBasicRepository.save(cardsBasic);
 
-        Instrument[] instruments = createInstruments(4,cardsBasic.getCardNumber(),cardsBasic.getCustomerNumber(),
+        Instrument[] instruments = createInstruments(4,cardsBasic.getCardId(),cardsBasic.getCustomerNumber(),
                 null, accountDefSet);
 
         instrumentRepository.saveAll(Arrays.asList(instruments));
 
-        String uri = EndPoints.CARD_INSTRUMENT.replace("{cardNumber}", cardsBasic.getCardNumber());
+        String uri = EndPoints.CARD_INSTRUMENT.replace("{cardNumber}", cardsBasic.getCardId());
 
         webTestClient.delete()
                 .uri(uri)
@@ -418,7 +408,7 @@ class InstrumentControllerTest {
                     List<InstrumentDto> instrumentDtoList = listEntityExchangeResult.getResponseBody();
 
                     List instrumentList = new ArrayList();
-                     instrumentRepository.findAllByCardNumber(cardsBasic.getCardNumber())
+                     instrumentRepository.findAllByCardNumber(cardsBasic.getCardId())
                      .forEach(instrumentList::add);
 
                      assertEquals(0,instrumentList.size());
@@ -435,12 +425,11 @@ class InstrumentControllerTest {
                 .activationWaiveDuration(Duration.ofDays(10))
                 .cardActivated(true)
                 .cardActivatedDate(LocalDateTime.now())
-                .cardNumber(cardNumber)
                 .dateCardValidFrom(LocalDate.of(2020,12,02))
                 .datePlasticIssued(LocalDateTime.now())
                 .expiryDate(LocalDate.of(2022,04,30))
                 .pendingCardAction(CardAction.NO_ACTION)
-                .plasticKey(new PlasticKey(UUID.randomUUID().toString().replace("-",""),cardNumber))
+                .plasticId(UUID.randomUUID().toString().replace("-",""))
                 .build()
                 ;
     }
@@ -484,14 +473,13 @@ class InstrumentControllerTest {
 
 
         return CardsBasic.builder()
-                .cardNumber(Util.generateCardNumberFromStarter("491652996363189"))
+                .cardId(Util.generateCardNumberFromStarter("491652996363189"))
                 .cardholderType(CardHolderType.PRIMARY)
                 .blockType(BlockType.APPROVE)
                 .cardStatus(CardStatus.ACTIVE)
                 .org(001)
                 .product(201)
                 .waiverDaysActivation(10)
-                .periodicTypePeriodicCardLimitMap(periodicTypeMap)
                 .accountDefSet(accountDefSet)
                 .customerNumber(UUID.randomUUID().toString().replace("-",""))
                 .build();
@@ -552,11 +540,10 @@ class InstrumentControllerTest {
         return AccountBasic.builder()
                 .org(001)
                 .product(201)
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .blockType(BlockType.BLOCK_DECLINE)
                 .dateBlockApplied(LocalDateTime.now())
                 .billingCurrencyCode("840")
-                .limitsMap(balanceTypesMap)
                 .datePreviousBLockType(LocalDateTime.of(2020,12,23,11,24,30))
                 .previousBlockType(BlockType.BLOCK_SUSPECTED_FRAUD)
                 .accountType(AccountType.CREDIT)
@@ -576,7 +563,7 @@ class InstrumentControllerTest {
 
 
         CustomerDef.CustomerDefBuilder builder = CustomerDef.builder()
-                .customerNumber(UUID.randomUUID().toString().replace("-",""))
+                .customerId(UUID.randomUUID().toString().replace("-",""))
                 .customerType(CustomerType.OWNER)
                 .addressType(AddressType.PRIMARY)
                 .customerName("Test 1")
@@ -658,15 +645,15 @@ class InstrumentControllerTest {
         accountBasicRepository.findAll()
                 .forEach(accountBasic -> accountBasicRepository.delete(accountBasic));
 
-        AccountBasic accountBasic = createAccountBasic(customerDef.getCustomerNumber());
+        AccountBasic accountBasic = createAccountBasic(customerDef.getCustomerId());
         accountBasic.setAccountType(AccountType.UNIVERSAL);
         accountBasicRepository.save(accountBasic);
 
-        accountBasic = createAccountBasic(customerDef.getCustomerNumber());
+        accountBasic = createAccountBasic(customerDef.getCustomerId());
         accountBasic.setAccountType(AccountType.CREDIT);
         accountBasicRepository.save(accountBasic);
 
-        accountBasic = createAccountBasic(customerDef.getCustomerNumber());
+        accountBasic = createAccountBasic(customerDef.getCustomerId());
         accountBasic.setAccountType(AccountType.SAVINGS);
         this.accountBasic = accountBasicRepository.save(accountBasic);
 
@@ -674,7 +661,7 @@ class InstrumentControllerTest {
 
         accountDefSet = StreamSupport.stream(accountBasicRepository.findAll().spliterator(),false)
                 .map(accountBasic1 -> AccountDef.builder()
-                        .accountNumber(accountBasic1.getAccountNumber())
+                        .accountNumber(accountBasic1.getAccountId())
                         .billingCurrencyCode(accountBasic1.getBillingCurrencyCode())
                         .accountType(accountBasic1.getAccountType())
                         .build()
@@ -798,7 +785,7 @@ class InstrumentControllerTest {
 
         InstrumentAddDTO.InstrumentAddDTOBuilder instrumentBuilder = InstrumentAddDTO.builder()
                 .instrumentNumber(instrumentNumber)
-                .cardNumber(cardNumber)
+                .cardId(cardNumber)
 //                .accountNumber(UUID.randomUUID().toString().replace("-", ""))
                 .active(true)
                 .instrumentType("0")
@@ -853,7 +840,7 @@ class InstrumentControllerTest {
 
         switch (i) {
             case 1: {
-                builder.cardNumber(cardNumber);
+                builder.cardId(cardNumber);
                 break;
             }
             case 2: {

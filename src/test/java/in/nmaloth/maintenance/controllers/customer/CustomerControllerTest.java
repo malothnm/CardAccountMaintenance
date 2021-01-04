@@ -55,7 +55,7 @@ class CustomerControllerTest {
     void createNewCustomer1() {
 
         CustomerAddDTO customerAddDTO = createCustomerAddDTO(true);
-        customerAddDTO.setCustomerNumber(null);
+        customerAddDTO.setCustomerId(null);
 
         webTestClient.post()
                 .uri(EndPoints.CUSTOMER)
@@ -65,7 +65,7 @@ class CustomerControllerTest {
                 .expectBody(CustomerDTO.class)
                 .value(customerDTO -> {
 
-                    Optional<CustomerDef> customerDefOptional = customerRepository.findById(customerDTO.getCustomerNumber());
+                    Optional<CustomerDef> customerDefOptional = customerRepository.findById(customerDTO.getCustomerId());
                     assertTrue(customerDefOptional.isPresent());
 
                 })
@@ -80,7 +80,7 @@ class CustomerControllerTest {
         customerRepository.save(customerDef);
 
         CustomerAddDTO customerAddDTO = createCustomerAddDTO(false);
-        customerAddDTO.setCustomerNumber(customerDef.getCustomerNumber());
+        customerAddDTO.setCustomerId(customerDef.getCustomerId());
 
         webTestClient.post()
                 .uri(EndPoints.CUSTOMER)
@@ -98,7 +98,7 @@ class CustomerControllerTest {
         CustomerDef customerDef = createCustomerDef(true);
         customerRepository.save(customerDef);
 
-        String url = EndPoints.CUSTOMER_ID.replace("{customerId}",customerDef.getCustomerNumber());
+        String url = EndPoints.CUSTOMER_ID.replace("{customerId}",customerDef.getCustomerId());
 
         webTestClient
                 .get()
@@ -107,7 +107,7 @@ class CustomerControllerTest {
                 .expectStatus().isOk()
                 .expectBody(CustomerDTO.class)
                 .value(customerDTO -> {
-                    assertEquals(customerDef.getCustomerNumber(),customerDTO.getCustomerNumber());
+                    assertEquals(customerDef.getCustomerId(),customerDTO.getCustomerId());
                 })
                 ;
 
@@ -118,7 +118,7 @@ class CustomerControllerTest {
 
         CustomerDef customerDef = createCustomerDef(true);
 
-        String url = EndPoints.CUSTOMER_ID.replace("{customerId}",customerDef.getCustomerNumber());
+        String url = EndPoints.CUSTOMER_ID.replace("{customerId}",customerDef.getCustomerId());
 
         webTestClient
                 .get()
@@ -137,7 +137,7 @@ class CustomerControllerTest {
         CustomerDef customerDef = createCustomerDef(true);
         customerRepository.save(customerDef);
 
-        String url = EndPoints.CUSTOMER_ID.replace("{customerId}",customerDef.getCustomerNumber());
+        String url = EndPoints.CUSTOMER_ID.replace("{customerId}",customerDef.getCustomerId());
 
         webTestClient
                 .get()
@@ -156,7 +156,7 @@ class CustomerControllerTest {
         customerRepository.save(customerDef);
 
         CustomerUpdateDTO customerUpdateDTO = createCustomerAddDTO(true,null);
-        customerUpdateDTO.setCustomerNumber(customerDef.getCustomerNumber());
+        customerUpdateDTO.setCustomerId(customerDef.getCustomerId());
 
         webTestClient.put()
                 .uri(EndPoints.CUSTOMER)
@@ -193,7 +193,7 @@ class CustomerControllerTest {
 
 
         CustomerDef.CustomerDefBuilder builder = CustomerDef.builder()
-                .customerNumber(UUID.randomUUID().toString().replace("-",""))
+                .customerId(UUID.randomUUID().toString().replace("-",""))
                 .customerType(CustomerType.OWNER)
                 .addressType(AddressType.PRIMARY)
                 .customerName("Test 1")
@@ -230,7 +230,7 @@ class CustomerControllerTest {
 
 
         CustomerAddDTO.CustomerAddDTOBuilder builder = CustomerAddDTO.builder()
-                .customerNumber(UUID.randomUUID().toString().replace("-",""))
+                .customerId(UUID.randomUUID().toString().replace("-",""))
                 .customerType(Util.getCustomerType(CustomerType.CO_OWNER))
                 .addressType(Util.getAddressType(AddressType.HOME))
                 .customerName("Test 2")
@@ -283,7 +283,7 @@ class CustomerControllerTest {
 
 
         CustomerUpdateDTO.CustomerUpdateDTOBuilder builder = CustomerUpdateDTO.builder()
-                .customerNumber(UUID.randomUUID().toString().replace("-",""));
+                .customerId(UUID.randomUUID().toString().replace("-",""));
 
 
         if(allFields){

@@ -22,8 +22,7 @@ import java.util.Set;
 public class CardBasicAddDTO {
 
 
-    @CreditCardNumber
-    private String cardNumber;
+    private String cardId;
 
     @Pattern(regexp = "P|S|A")
     @NotNull

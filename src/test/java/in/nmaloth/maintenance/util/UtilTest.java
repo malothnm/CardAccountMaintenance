@@ -146,7 +146,7 @@ class UtilTest {
     @Test
     void getInstrumentTypes() {
 
-        String[] testValues = {"0","1","2","3","4","5","6"};
+        String[] testValues = {"0","1","2","3","4","5","6","7"};
         InstrumentType[] instrumentTypes = new InstrumentType[testValues.length];
         for (int i = 0; i < testValues.length ; i ++ ) {
             instrumentTypes[i] = Util.getInstrumentType(testValues[i]);

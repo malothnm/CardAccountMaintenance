@@ -17,8 +17,8 @@ public interface AccountBasicService {
 
     Mono<AccountBasic> createNewAccountBasic(AccountBasicAddDTO accountBasicAddDTO);
     Mono<AccountBasic> updateAccountBasic(AccountBasicUpdateDTO accountBasicUpdateDTO);
-    Mono<AccountBasic> fetchAccountBasicInfo(String accountNumber);
-    Mono<Optional<AccountBasic>> fetchAccountBasicInfoOptional(String accountNumber);
+    Mono<AccountBasic> fetchAccountBasicInfo(String accountId);
+    Mono<Optional<AccountBasic>> fetchAccountBasicInfoOptional(String accountId);
     Mono<AccountBasic> deleteAccountBasic(String accountNumber);
 
     AccountBasicDTO convertToDTO(AccountBasic accountBasic);

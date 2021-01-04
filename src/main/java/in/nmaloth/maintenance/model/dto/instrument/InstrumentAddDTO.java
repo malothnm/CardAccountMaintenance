@@ -22,15 +22,14 @@ public class InstrumentAddDTO {
 
     private String instrumentNumber;
     @NotNull
-    @Pattern(regexp = "0|1|2|3|4|5|6")
+    @Pattern(regexp = "0|1|2|3|4|5|6|7")
     private String instrumentType;
 
     @NotNull
     private Boolean active;
 
     @NotNull
-    @CreditCardNumber
-    private String cardNumber;
+    private String cardId;
 
 
     @Pattern(regexp = "0|1|2|3|4|5|6")

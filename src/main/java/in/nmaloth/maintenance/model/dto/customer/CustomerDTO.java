@@ -13,7 +13,8 @@ import java.util.Map;
 
 public class CustomerDTO {
 
-    private String customerNumber;
+    private String customerId;
+
     private String addressType;
     private String customerType;
 

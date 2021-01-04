@@ -21,9 +21,8 @@ import java.util.Set;
 public class CardBasicUpdateDTO {
 
 
-    @CreditCardNumber
     @NotNull
-    private String cardNumber;
+    private String cardId;
 
     @Pattern(regexp = "P|S|A")
     private String cardHolderType;
@@ -49,7 +48,6 @@ public class CardBasicUpdateDTO {
     private Set<AccountDefDTO> accountDefDTOSetAdd;
     @Valid
     private Set<AccountDefDTO> accountDefDTOSetDelete;
-
 
     private List<PeriodicCardLimitDTO> periodicCardLimitDTOAddList;
 

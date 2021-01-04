@@ -13,8 +13,8 @@ import java.util.List;
 public class AccountAccumValuesDTO {
 
 
-    private String accountNumber;
     private String accountId;
+    private List<BalanceTypesDTO> balanceTypesDTOList;
     private List<AccountBalancesDTO> accountBalancesDTOList;
 
 }

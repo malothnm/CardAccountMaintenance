@@ -37,7 +37,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Mono<CustomerDef> updateCustomerRecord(CustomerUpdateDTO customerUpdateDTO) {
-        return customerDefDataService.findCustomerDefById(customerUpdateDTO.getCustomerNumber())
+        return customerDefDataService.findCustomerDefById(customerUpdateDTO.getCustomerId())
                 .map(customerDefOptional -> {
                     if(customerDefOptional.isPresent()){
                         return customerDefOptional.get();
@@ -51,30 +51,30 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Mono<CustomerDef> fetchCustomerInfo(String customerNumber) {
-        return customerDefDataService.findCustomerDefById(customerNumber)
+    public Mono<CustomerDef> fetchCustomerInfo(String customerId) {
+        return customerDefDataService.findCustomerDefById(customerId)
                 .map(customerDefOptional -> {
                     if(customerDefOptional.isPresent()){
                         return customerDefOptional.get();
                     }
-                    throw new NotFoundException("Invalid Customer Number " + customerNumber);
+                    throw new NotFoundException("Invalid Customer Number " + customerId);
                 })
                 ;
     }
 
     @Override
-    public Mono<Optional<CustomerDef>> fetchCustomerInfoOptional(String customerNumber) {
-        return customerDefDataService.findCustomerDefById(customerNumber);
+    public Mono<Optional<CustomerDef>> fetchCustomerInfoOptional(String customerId) {
+        return customerDefDataService.findCustomerDefById(customerId);
     }
 
     @Override
-    public Mono<CustomerDef> deleteCustomerInfo(String customerNumber) {
-        return customerDefDataService.deleteCustomerDef(customerNumber)
+    public Mono<CustomerDef> deleteCustomerInfo(String customerId) {
+        return customerDefDataService.deleteCustomerDef(customerId)
                 .map(customerDefOptional -> {
                     if(customerDefOptional.isPresent()){
                         return customerDefOptional.get();
                     }
-                    throw new NotFoundException("Invalid Customer Number " + customerNumber);
+                    throw new NotFoundException("Invalid Customer Number " + customerId);
                 })
                 ;
     }
@@ -83,7 +83,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerDTO convertToDTO(CustomerDef customerDef) {
 
         CustomerDTO.CustomerDTOBuilder builder = CustomerDTO.builder()
-                .customerNumber(customerDef.getCustomerNumber())
+                .customerId(customerDef.getCustomerId())
                 .addressType(Util.getAddressType(customerDef.getAddressType()))
                 .customerType(Util.getCustomerType(customerDef.getCustomerType()))
                 .customerName(customerDef.getCustomerName())
@@ -122,7 +122,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerDef convertDTOToCustomerDef(CustomerAddDTO customerAddDTO) {
 
         CustomerDef.CustomerDefBuilder builder = CustomerDef.builder()
-                .customerNumber(customerAddDTO.getCustomerNumber())
+                .customerId(customerAddDTO.getCustomerId())
                 .addressType(Util.getAddressType(customerAddDTO.getAddressType()))
                 .customerType(Util.getCustomerType(customerAddDTO.getCustomerType()))
                 .customerName(customerAddDTO.getCustomerName())

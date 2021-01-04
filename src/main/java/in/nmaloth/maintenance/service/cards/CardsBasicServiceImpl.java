@@ -2,10 +2,7 @@ package in.nmaloth.maintenance.service.cards;
 
 import in.nmaloth.entity.BlockType;
 import in.nmaloth.entity.account.AccountDef;
-import in.nmaloth.entity.card.CardsBasic;
-import in.nmaloth.entity.card.LimitType;
-import in.nmaloth.entity.card.PeriodicCardAmount;
-import in.nmaloth.entity.card.PeriodicType;
+import in.nmaloth.entity.card.*;
 import in.nmaloth.entity.product.ProductDef;
 import in.nmaloth.maintenance.config.data.ProductTable;
 import in.nmaloth.maintenance.dataService.card.CardBasicDataService;
@@ -45,6 +42,11 @@ public class CardsBasicServiceImpl implements CardsBasicService {
                 ;
     }
 
+    @Override
+    public Mono<CardsBasic> saveCardsRecord(CardsBasic cardsBasic) {
+        return cardBasicDataService.saveCardBasicValues(cardsBasic);
+    }
+
 
     @Override
     public Mono<CardsBasic> fetchCardInfo(String cardNumber) {
@@ -67,12 +69,12 @@ public class CardsBasicServiceImpl implements CardsBasicService {
     @Override
     public Mono<CardsBasic> updateCards(CardBasicUpdateDTO cardBasicUpdateDTO) {
 
-        return cardBasicDataService.findCardBasicValuesById(cardBasicUpdateDTO.getCardNumber())
+        return cardBasicDataService.findCardBasicValuesById(cardBasicUpdateDTO.getCardId())
                 .map(cardsBasicOptional -> {
                     if(cardsBasicOptional.isPresent()){
                         return cardsBasicOptional.get();
                     }
-                    throw new NotFoundException("Card Number Not Found" + cardBasicUpdateDTO.getCardNumber());
+                    throw new NotFoundException("Card Number Not Found" + cardBasicUpdateDTO.getCardId());
                 })
                 .map(cardsBasic -> {
                     ProductDef productDef = productTable.findProductDef(cardsBasic.getOrg(),cardsBasic.getProduct());
@@ -105,7 +107,6 @@ public class CardsBasicServiceImpl implements CardsBasicService {
     public CardBasicDTO convertToDTO(CardsBasic cardsBasic) {
 
         CardBasicDTO.CardBasicDTOBuilder builder = CardBasicDTO.builder()
-                .cardNumber(cardsBasic.getCardNumber())
                 .product(cardsBasic.getProduct())
                 .org(cardsBasic.getOrg())
                 .cardStatus(Util.getCardStatus(cardsBasic.getCardStatus()))
@@ -113,10 +114,11 @@ public class CardsBasicServiceImpl implements CardsBasicService {
                 .blockType(Util.getBlockType(cardsBasic.getBlockType()))
                 .waiverDaysActivation(cardsBasic.getWaiverDaysActivation())
                 .customerNumber(cardsBasic.getCustomerNumber())
+                .cardId(cardsBasic.getCardId())
                 .cardReturnNumber(cardsBasic.getCardReturnNumber())
                 .accountDefDTOSet(cardsBasic.getAccountDefSet().stream()
                         .map(accountDef -> AccountDefDTO.builder()
-                                .accountNumber(accountDef.getAccountNumber())
+                                .accountId(accountDef.getAccountNumber())
                                 .billingCurrencyCode(accountDef.getBillingCurrencyCode())
                                 .accountType(Util.getAccountType(accountDef.getAccountType()))
                                 .build()
@@ -125,6 +127,15 @@ public class CardsBasicServiceImpl implements CardsBasicService {
 
                 )
                 ;
+
+        if(cardsBasic.getPlasticList() != null){
+            List<PlasticsDTO> plasticsDTOList = cardsBasic.getPlasticList()
+                    .stream()
+                    .map(plastic -> convertPlasticDTO(plastic))
+                    .collect(Collectors.toList());
+
+            builder.plasticsDTOList(plasticsDTOList);
+        }
 
         if(cardsBasic.getPrevBlockType() != null){
             builder.prevBlockType(Util.getBlockType(cardsBasic.getPrevBlockType()));
@@ -149,48 +160,7 @@ public class CardsBasicServiceImpl implements CardsBasicService {
             builder.datePrevBlockCode(cardsBasic.getDatePrevBlockCode());
         }
 
-        if(cardsBasic.getPeriodicTypePeriodicCardLimitMap() != null){
-            builder.periodicCardLimitDTOList(updatePeriodicType(cardsBasic.getPeriodicTypePeriodicCardLimitMap()));
-        }
-
-
         return builder.build();
-    }
-
-    private List<PeriodicCardLimitDTO> updatePeriodicType(Map<PeriodicType, Map<LimitType, PeriodicCardAmount>> periodicTypePeriodicCardLimitMap) {
-
-        List<PeriodicCardLimitDTO> periodicCardLimitDTOList = new ArrayList<>();
-        periodicTypePeriodicCardLimitMap.entrySet()
-                .forEach(periodicTypeMapEntry -> {
-                    PeriodicCardLimitDTO periodicCardLimitDTO = PeriodicCardLimitDTO.builder()
-                            .periodicType(Util.getPeriodicType(periodicTypeMapEntry.getKey()))
-                            .cardLimitsDTOList(updateCardLimts(periodicTypeMapEntry.getValue()))
-                            .build();
-                    periodicCardLimitDTOList.add(periodicCardLimitDTO);
-                });
-
-        return periodicCardLimitDTOList;
-
-    }
-
-    private List<CardLimitsDTO> updateCardLimts(Map<LimitType, PeriodicCardAmount> periodicCardAmountMap) {
-
-        List<CardLimitsDTO> cardLimitsDTOList = new ArrayList<>();
-
-        periodicCardAmountMap.entrySet()
-                .forEach(limitTypePeriodicCardAmountEntry -> {
-
-                    CardLimitsDTO cardLimitsDTO = CardLimitsDTO.builder()
-                            .limitType(Util.getLimitType(limitTypePeriodicCardAmountEntry.getKey()))
-                            .limitAmount(limitTypePeriodicCardAmountEntry.getValue().getTransactionAmount())
-                            .limitNumber(limitTypePeriodicCardAmountEntry.getValue().getTransactionNumber())
-                            .build();
-                    cardLimitsDTOList.add(cardLimitsDTO);
-
-                } );
-
-        return cardLimitsDTOList;
-
     }
 
     @Override
@@ -205,15 +175,8 @@ public class CardsBasicServiceImpl implements CardsBasicService {
             cardWaiverActivationDays = productDef.getCardsWaiverActivationDays();
         }
 
-        Map<PeriodicType,Map<LimitType,PeriodicCardAmount>> periodicTypeMapMap = new HashMap<>();
-
-        if(cardBasicAddDTO.getPeriodicCardLimitDTOList() != null){
-            convertDTOPeriodicMap(cardBasicAddDTO.getPeriodicCardLimitDTOList(),periodicTypeMapMap);
-        }
-
 
         CardsBasic.CardsBasicBuilder builder = CardsBasic.builder()
-                .cardNumber(cardBasicAddDTO.getCardNumber())
                 .org(cardBasicAddDTO.getOrg())
                 .product(cardBasicAddDTO.getProduct())
                 .cardStatus(Util.getCardStatus(cardBasicAddDTO.getCardStatus()))
@@ -222,11 +185,11 @@ public class CardsBasicServiceImpl implements CardsBasicService {
                 .cardReturnNumber(0)
                 .customerNumber(cardBasicAddDTO.getCustomerNumber())
                 .waiverDaysActivation(cardWaiverActivationDays)
-                .periodicTypePeriodicCardLimitMap(periodicTypeMapMap)
+                .cardId(cardBasicAddDTO.getCardId())
                 .accountDefSet(cardBasicAddDTO.getAccountDefDTOSet()
                         .stream()
                         .map(accountDefDTO -> AccountDef.builder()
-                                .accountNumber(accountDefDTO.getAccountNumber())
+                                .accountNumber(accountDefDTO.getAccountId())
                                 .billingCurrencyCode(accountDefDTO.getBillingCurrencyCode())
                                 .accountType(Util.getAccountType(accountDefDTO.getAccountType()))
                                 .build()
@@ -247,34 +210,6 @@ public class CardsBasicServiceImpl implements CardsBasicService {
 
     }
 
-    private void convertDTOPeriodicMap(List<PeriodicCardLimitDTO> periodicCardLimitDTOList,
-                                       Map<PeriodicType, Map<LimitType, PeriodicCardAmount>> periodicTypeMapMap) {
-
-        periodicCardLimitDTOList.forEach(periodicCardLimitDTO -> {
-
-            Map<LimitType, PeriodicCardAmount> limitMap = periodicTypeMapMap.get(Util.getPeriodicType(periodicCardLimitDTO.getPeriodicType()));
-
-            if(limitMap == null){
-                limitMap = new HashMap<>();
-            }
-            periodicTypeMapMap.put(Util.getPeriodicType(periodicCardLimitDTO.getPeriodicType()),updateLimitsFromDTO(periodicCardLimitDTO.getCardLimitsDTOList(),limitMap));
-        });
-    }
-
-    private Map<LimitType, PeriodicCardAmount> updateLimitsFromDTO(List<CardLimitsDTO> cardLimitsDTOList, Map<LimitType, PeriodicCardAmount> limitMap) {
-
-        cardLimitsDTOList.forEach(cardLimitsDTO -> {
-
-            limitMap.put(Util.getLimitType(cardLimitsDTO.getLimitType()),PeriodicCardAmount.builder()
-                    .limitType(Util.getLimitType(cardLimitsDTO.getLimitType()))
-                    .transactionAmount(cardLimitsDTO.getLimitAmount())
-                    .transactionNumber(cardLimitsDTO.getLimitNumber())
-                    .build()
-            );
-        });
-
-        return limitMap;
-    }
 
 
     @Override
@@ -321,24 +256,41 @@ public class CardsBasicServiceImpl implements CardsBasicService {
             if(cardBasicUpdateDTO.getCardStatus() != null){
                 cardsBasic.setCardStatus(Util.getCardStatus(cardBasicUpdateDTO.getCardStatus()));
             }
-            Map<PeriodicType,Map<LimitType,PeriodicCardAmount>> periodicTypeMapMap;
-            if(cardBasicUpdateDTO.getPeriodicCardLimitDTOAddList() != null){
-                if(cardsBasic.getPeriodicTypePeriodicCardLimitMap() == null){
-                    periodicTypeMapMap = new HashMap<>();
-                } else {
-                    periodicTypeMapMap = cardsBasic.getPeriodicTypePeriodicCardLimitMap();
-                }
-                convertDTOPeriodicMap(cardBasicUpdateDTO.getPeriodicCardLimitDTOAddList(),periodicTypeMapMap);
 
-            }
-
-            if(cardBasicUpdateDTO.getPeriodicCardLimitDTODeleteList() != null){
-                if(cardsBasic.getPeriodicTypePeriodicCardLimitMap() != null){
-                    deleteLimits(cardBasicUpdateDTO.getPeriodicCardLimitDTODeleteList(),cardsBasic.getPeriodicTypePeriodicCardLimitMap());
-                }
-            }
 
         return cardsBasic;
+    }
+
+    @Override
+    public PlasticsDTO convertPlasticDTO(Plastic plastic) {
+
+        PlasticsDTO.PlasticsDTOBuilder builder = PlasticsDTO.builder()
+                .plasticId(plastic.getPlasticId())
+                .activationWaiveDuration(plastic.getActivationWaiveDuration().toDays())
+                .cardAction(Util.getCardAction(plastic.getCardAction()))
+                .cardActivated(plastic.getCardActivated());
+
+        if(plastic.getExpiryDate() != null){
+            builder.expiryDate(plastic.getExpiryDate());
+        }
+
+        if(plastic.getCardActivatedDate() != null){
+            builder.cardActivatedDate(plastic.getCardActivatedDate());
+        }
+        if(plastic.getDatePlasticIssued() != null){
+            builder.datePlasticIssued(plastic.getDatePlasticIssued());
+        }
+        if(plastic.getDateCardValidFrom() != null){
+            builder.dateCardValidFrom(plastic.getDateCardValidFrom());
+        }
+        if(plastic.getDynamicCVV() != null){
+            builder.dynamicCVV(plastic.getDynamicCVV());
+        }
+        if(plastic.getPendingCardAction() != null){
+            builder.pendingCardAction(Util.getCardAction(plastic.getPendingCardAction()));
+        }
+
+        return builder.build();
     }
 
     private void deleteAccountDef(Set<AccountDefDTO> accountDefDTOSetDelete, CardsBasic cardsBasic) {
@@ -347,7 +299,7 @@ public class CardsBasicServiceImpl implements CardsBasicService {
                 .map(accountDefDTO -> AccountDef.builder()
                         .accountType(Util.getAccountType(accountDefDTO.getAccountType()))
                         .billingCurrencyCode(accountDefDTO.getBillingCurrencyCode())
-                        .accountNumber(accountDefDTO.getAccountNumber())
+                        .accountNumber(accountDefDTO.getAccountId())
                         .build()
                 )
                 .forEach(accountDef -> cardsBasic.getAccountDefSet().remove(accountDef));
@@ -359,27 +311,11 @@ public class CardsBasicServiceImpl implements CardsBasicService {
                 .map(accountDefDTO -> AccountDef.builder()
                         .accountType(Util.getAccountType(accountDefDTO.getAccountType()))
                         .billingCurrencyCode(accountDefDTO.getBillingCurrencyCode())
-                        .accountNumber(accountDefDTO.getAccountNumber())
+                        .accountNumber(accountDefDTO.getAccountId())
                         .build()
                 )
                 .forEach(accountDef -> cardsBasic.getAccountDefSet().add(accountDef));
         
-    }
-
-    private void deleteLimits(List<PeriodicCardLimitDTO> periodicCardLimitDTODeleteList, Map<PeriodicType, Map<LimitType, PeriodicCardAmount>> periodicTypePeriodicCardLimitMap) {
-
-
-        periodicCardLimitDTODeleteList
-                .forEach(periodicCardLimitDTO -> {
-                    Map<LimitType,PeriodicCardAmount> limitCardAmountMap = periodicTypePeriodicCardLimitMap.get(Util.getPeriodicType(periodicCardLimitDTO.getPeriodicType()));
-                    if(limitCardAmountMap != null){
-                        periodicCardLimitDTO.getCardLimitsDTOList()
-                                .forEach(cardLimitsDTO -> {
-                                    limitCardAmountMap.remove(Util.getLimitType(cardLimitsDTO.getLimitType()));
-                                });
-                    }
-                });
-
     }
 
 

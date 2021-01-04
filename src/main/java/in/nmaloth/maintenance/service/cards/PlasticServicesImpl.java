@@ -3,10 +3,8 @@ package in.nmaloth.maintenance.service.cards;
 import in.nmaloth.entity.card.CardAction;
 import in.nmaloth.entity.card.CardsBasic;
 import in.nmaloth.entity.card.Plastic;
-import in.nmaloth.entity.card.PlasticKey;
 import in.nmaloth.entity.product.ProductDef;
 import in.nmaloth.maintenance.config.data.ProductTable;
-import in.nmaloth.maintenance.dataService.card.PlasticDataService;
 import in.nmaloth.maintenance.exception.InvalidInputDataException;
 import in.nmaloth.maintenance.exception.NotFoundException;
 import in.nmaloth.maintenance.model.combined.CardsPlasticCombined;
@@ -23,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,14 +31,11 @@ import java.util.UUID;
 @Slf4j
 public class PlasticServicesImpl implements PlasticServices {
 
-    private final PlasticDataService plasticDataService;
     private final CardsBasicService cardsBasicService;
     private final ProductTable productTable;
 
-    public PlasticServicesImpl(PlasticDataService plasticDataService,
-                               CardsBasicService cardsBasicService,
+    public PlasticServicesImpl( CardsBasicService cardsBasicService,
                                ProductTable productTable) {
-        this.plasticDataService = plasticDataService;
         this.cardsBasicService = cardsBasicService;
         this.productTable = productTable;
     }
@@ -47,74 +43,83 @@ public class PlasticServicesImpl implements PlasticServices {
 
     @Override
     public Mono<Plastic> fetchPlasticInfo(String plasticId,String cardNumber) {
-        return plasticDataService.findPlasticById(plasticId,cardNumber)
-                .map(plasticOptional -> {
-                    if(plasticOptional.isPresent()){
-                        return plasticOptional.get();
-                    }
-                    throw  new NotFoundException(" Invalid Plastic ID " + plasticId + " card number " + cardNumber);
-                })
+        return cardsBasicService.fetchCardInfo(cardNumber)
+                .map(cardsBasic -> findPlastic(plasticId,cardsBasic))
                 ;
     }
 
     @Override
-    public Mono<Plastic> deletePlasticInfo(String plasticId,String cardNumber) {
-        return plasticDataService.deletePlasticById(plasticId,cardNumber)
-                .map(plasticOptional -> {
-                    if(plasticOptional.isPresent()){
-                        return plasticOptional.get();
-                    }
-                    throw  new NotFoundException(" Invalid Plastic ID " + plasticId + " card number " + cardNumber);
+    public Mono<CardsBasic> deletePlasticInfo(String plasticId,String cardNumber) {
+        return cardsBasicService.fetchCardInfo(cardNumber)
+                .map(cardsBasic -> {
+                    Plastic plastic = findPlastic(plasticId,cardsBasic);
+                    cardsBasic.getPlasticList().remove(plastic);
+                    return cardsBasic;
                 })
+               .flatMap(cardsBasic -> cardsBasicService.saveCardsRecord(cardsBasic))
                 ;
     }
 
     @Override
     public Flux<Plastic> fetchAllPlasticInfo(String cardNumber) {
-        return plasticDataService.findAllPlastic(cardNumber)
+        return cardsBasicService.fetchCardInfo(cardNumber)
+                .flatMapMany(cardsBasic -> Flux.fromIterable(cardsBasic.getPlasticList()))
                 ;
     }
 
     @Override
-    public Flux<Plastic> deleteAllPlastics(String cardNumber) {
-        return plasticDataService.deleteAllPlastics(cardNumber)
-                ;
-    }
-
-    @Override
-    public Mono<Plastic> savePlastic(Plastic plastic) {
-        return plasticDataService.savePlastic(plastic)
-                ;
-    }
-
-    @Override
-    public Mono<Plastic> createNewPlastic(PlasticUpdateDto plasticUpdateDto) {
-
-        return cardsBasicService.fetchCardInfo(plasticUpdateDto.getCardNumber())
-                .flatMap(cardsBasic -> createCombinedLayout(cardsBasic))
-                .map(cardsPlasticCombined -> {
-                    CardsBasic cardsBasic = cardsPlasticCombined.getCardsBasic();
-                    ProductDef productDef = productTable.findProductDef(cardsBasic.getOrg(),cardsBasic.getProduct());
-                    return updatePlastic(plasticUpdateDto, cardsBasic, productDef, cardsPlasticCombined.getPlasticList());
+    public Mono<CardsBasic> deleteAllPlastics(String cardNumber) {
+        return cardsBasicService.fetchCardInfo(cardNumber)
+                .map(cardsBasic -> {
+                    cardsBasic.setPlasticList(new ArrayList<>());
+                    return cardsBasic;
                 })
-                .flatMap(plastic -> plasticDataService.savePlastic(plastic))
+                .flatMap(cardsBasic -> cardsBasicService.saveCardsRecord(cardsBasic))
+                ;
+    }
+
+
+    @Override
+    public Mono<CardsBasic> createNewPlastic(PlasticUpdateDto plasticUpdateDto) {
+
+        return cardsBasicService.fetchCardInfo(plasticUpdateDto.getCardId())
+                .map(cardsBasic -> {
+                    ProductDef productDef = productTable.findProductDef(cardsBasic.getOrg(),cardsBasic.getProduct());
+                    Plastic plastic = updatePlastic(plasticUpdateDto, cardsBasic, productDef);
+                    if(cardsBasic.getPlasticList() == null){
+                        cardsBasic.setPlasticList(new ArrayList<>());
+                    }
+                    cardsBasic.getPlasticList().add(plastic);
+                    return cardsBasic;
+                })
+                .flatMap(cardsBasic -> cardsBasicService.saveCardsRecord(cardsBasic))
                 ;
     }
 
     @Override
     public Mono<Plastic> updatePlasticData(PlasticUpdateDto plasticUpdateDto) {
 
-        return plasticDataService.findPlasticById(plasticUpdateDto.getPlasticId(),plasticUpdateDto.getCardNumber())
-                .map(plasticOptional -> {
-                    if(plasticOptional.isEmpty()){
-                        throw  new NotFoundException("plastic id not Found ");
-                    }
-                    return plasticOptional.get();
+        return cardsBasicService.fetchCardInfo(plasticUpdateDto.getCardId())
+                .map(cardsBasic -> {
+
+                    Plastic plastic = findPlastic(plasticUpdateDto.getPlasticId(),cardsBasic);
+                    updatePlasticFields(plastic,plasticUpdateDto);
+                    return cardsBasic;
                 })
-                .map(plastic -> updatePlasticFields(plastic,plasticUpdateDto))
-                .flatMap(plastic -> plasticDataService.savePlastic(plastic))
+                .flatMap(cardsBasic -> cardsBasicService.saveCardsRecord(cardsBasic))
+                .map(cardsBasic -> findPlastic(plasticUpdateDto.getPlasticId(),cardsBasic))
 
                 ;
+    }
+
+    private Plastic findPlastic(String plasticId, CardsBasic cardsBasic){
+
+        return cardsBasic.getPlasticList()
+                .stream()
+                .filter(plastic -> plastic.getPlasticId().equals(plasticId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("plastic id not Found "));
+
     }
 
     @Override
@@ -166,46 +171,16 @@ public class PlasticServicesImpl implements PlasticServices {
 
     }
 
-    private Mono<CardsPlasticCombined> createCombinedLayout(CardsBasic cardsBasic) {
-        return plasticDataService.findListPlastic(cardsBasic.getCardNumber())
-                .map(plasticList -> new CardsPlasticCombined(cardsBasic,plasticList));
-    }
 
     @Override
     public PlasticsDTO convertPlasticDTO(Plastic plastic) {
 
-        PlasticsDTO.PlasticsDTOBuilder builder = PlasticsDTO.builder()
-                .id(plastic.getPlasticKey().getId())
-                .cardNumber(plastic.getCardNumber())
-                .activationWaiveDuration(plastic.getActivationWaiveDuration().toDays())
-                .cardAction(Util.getCardAction(plastic.getCardAction()))
-                .cardActivated(plastic.getCardActivated());
+        return cardsBasicService.convertPlasticDTO(plastic);
 
-        if(plastic.getExpiryDate() != null){
-            builder.expiryDate(plastic.getExpiryDate());
-        }
-
-        if(plastic.getCardActivatedDate() != null){
-            builder.cardActivatedDate(plastic.getCardActivatedDate());
-        }
-        if(plastic.getDatePlasticIssued() != null){
-            builder.datePlasticIssued(plastic.getDatePlasticIssued());
-        }
-        if(plastic.getDateCardValidFrom() != null){
-            builder.dateCardValidFrom(plastic.getDateCardValidFrom());
-        }
-        if(plastic.getDynamicCVV() != null){
-            builder.dynamicCVV(plastic.getDynamicCVV());
-        }
-        if(plastic.getPendingCardAction() != null){
-            builder.pendingCardAction(Util.getCardAction(plastic.getPendingCardAction()));
-        }
-
-        return builder.build();
     }
 
     @Override
-    public Plastic updatePlastic(PlasticUpdateDto plasticUpdateDto, CardsBasic cardsBasic, ProductDef productDef,List<Plastic> plasticList) {
+    public Plastic updatePlastic(PlasticUpdateDto plasticUpdateDto, CardsBasic cardsBasic, ProductDef productDef) {
 
         CardAction cardAction = Util.getCardAction(plasticUpdateDto.getCardAction());
         switch (cardAction){
@@ -213,13 +188,13 @@ public class PlasticServicesImpl implements PlasticServices {
                 return createNewPlastic(productDef,cardsBasic,plasticUpdateDto);
             }
             case REISSUE_CARD:{
-                return createReissuePlastic(productDef,cardsBasic,plasticList,plasticUpdateDto);
+                return createReissuePlastic(productDef,cardsBasic,cardsBasic.getPlasticList(),plasticUpdateDto);
             }
             case ADDITIONAL_CARD:{
                 throw  new RuntimeException(" Additional Card Not Supported ");
             }
             case REPLACEMENT_CARD:{
-                return createReplacePlastic(productDef,cardsBasic,plasticList,plasticUpdateDto);
+                return createReplacePlastic(productDef,cardsBasic,cardsBasic.getPlasticList(),plasticUpdateDto);
 
             }
             case EMERGENCY_REPLACEMENT_CARD:{
@@ -287,7 +262,7 @@ public class PlasticServicesImpl implements PlasticServices {
                                          PlasticUpdateDto plasticUpdateDto){
 
         Optional<Plastic> optionalPlastic = plasticList.stream()
-                .filter(plastic -> plastic.getPlasticKey().getId().equals(plasticUpdateDto.getPlasticId()))
+                .filter(plastic -> plastic.getPlasticId().equals(plasticUpdateDto.getPlasticId()))
                 .findFirst();
 
         if(optionalPlastic.isPresent()){
@@ -318,7 +293,7 @@ public class PlasticServicesImpl implements PlasticServices {
                                          List<Plastic> plasticList,PlasticUpdateDto plasticUpdateDto){
 
         Optional<Plastic> optionalPlastic = plasticList.stream()
-                .filter(plastic -> plastic.getPlasticKey().getId().equals(plasticUpdateDto.getPlasticId()))
+                .filter(plastic -> plastic.getPlasticId().equals(plasticUpdateDto.getPlasticId()))
                 .findFirst();
 
         if(optionalPlastic.isPresent()){
@@ -360,8 +335,7 @@ public class PlasticServicesImpl implements PlasticServices {
 //                .datePlasticIssued(LocalDateTime.now())
                 .dynamicCVV(dynamicCvv)
                 .pendingCardAction(cardAction)
-                .plasticKey(new PlasticKey(UUID.randomUUID().toString().replace("-", ""), cardsBasic.getCardNumber()))
-                .cardNumber(cardsBasic.getCardNumber())
+                .plasticId(UUID.randomUUID().toString().replace("-", ""))
                 ;
 
         if(!productDef.getCardsActivationRequired()){

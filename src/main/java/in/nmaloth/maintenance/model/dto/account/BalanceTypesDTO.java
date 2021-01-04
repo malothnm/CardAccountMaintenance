@@ -15,10 +15,8 @@ import javax.validation.constraints.PositiveOrZero;
 public class BalanceTypesDTO {
 
     @Pattern(regexp = "0|1|2|3|4|5|6|7")
-    @NotNull
     private String balanceType;
 
     @PositiveOrZero
-    @NotNull
     private Long limitAmount;
 }

@@ -21,9 +21,9 @@ public class InstrumentDto {
     private String instrumentType;
 
     private boolean active;
-    private String cardNumber;
+    private String cardId;
     private Set<AccountDefDTO> accountDefDTOSet;
-    private String customerNumber;
+    private String customerId;
     private String corporateNumber;
     private String blockType;
     private String expiryDate;

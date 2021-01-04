@@ -18,7 +18,7 @@ import java.util.List;
 public class CustomerUpdateDTO {
 
     @NotNull
-    private String customerNumber;
+    private String customerId;
 
     @Pattern(regexp = "H|O|P|C|S|1|2|3|4" )
     private String addressType;

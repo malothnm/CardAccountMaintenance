@@ -22,20 +22,24 @@ public class NumberServiceImpl implements NumberService {
 
 
     @Override
-    public Mono<String> generateNewCustomerNumber() {
+    public Mono<String> generateNewCustomerId() {
         return Mono.just(UUID.randomUUID().toString().replace("-",""));
     }
 
     @Override
-    public Mono<String> generateNewAccountNumber() {
+    public Mono<String> generateNewAccountId() {
 
         return Mono.just(UUID.randomUUID().toString().replace("-",""));
     }
 
     @Override
-    public Mono<String> generateNewCardNumber(Integer org, Integer product) {
+    public Mono<String> generateNewCardId() {
+        return Mono.just(UUID.randomUUID().toString().replace("-",""));
+    }
+
+    private Mono<String> generateNewInstrumentNumber(Integer org, Integer product) {
         return productCardGenService.fetchProductCardGenInfo(org,product)
-                .flatMap(productCardGenDef -> generateNextCardNumber(productCardGenDef))
+                .flatMap(productCardGenDef -> generateNextInstrumentNumber(productCardGenDef))
                 ;
     }
 
@@ -46,16 +50,17 @@ public class NumberServiceImpl implements NumberService {
         switch (instrumentType){
 
             case ONE_TIME_USE_CARD:
+            case ACCOUNT_NUMBER:
             case CARD_LESS:{
                 return Mono.just(UUID.randomUUID().toString().replace("-",""));
             }
             default: {
-                return generateNewCardNumber(org,product);
+                return generateNewInstrumentNumber(org,product);
             }
         }
     }
 
-    private Mono<? extends String> generateNextCardNumber(ProductCardGenDef productCardGenDef) {
+    private Mono<? extends String> generateNextInstrumentNumber(ProductCardGenDef productCardGenDef) {
 
         String lastCardNumber = productCardGenDef.getLastGeneratedCardNumber();
 

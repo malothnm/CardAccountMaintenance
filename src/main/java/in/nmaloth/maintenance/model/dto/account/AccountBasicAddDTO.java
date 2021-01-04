@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class AccountBasicAddDTO {
 
-    private String accountNumber;
+    private String accountId;
 
     @NotNull
     @PositiveOrZero

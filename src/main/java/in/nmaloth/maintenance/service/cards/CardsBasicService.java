@@ -1,10 +1,12 @@
 package in.nmaloth.maintenance.service.cards;
 
 import in.nmaloth.entity.card.CardsBasic;
+import in.nmaloth.entity.card.Plastic;
 import in.nmaloth.entity.product.ProductDef;
 import in.nmaloth.maintenance.model.dto.card.CardBasicAddDTO;
 import in.nmaloth.maintenance.model.dto.card.CardBasicDTO;
 import in.nmaloth.maintenance.model.dto.card.CardBasicUpdateDTO;
+import in.nmaloth.maintenance.model.dto.card.PlasticsDTO;
 import reactor.core.publisher.Mono;
 
 import javax.swing.text.html.Option;
@@ -15,14 +17,17 @@ public interface CardsBasicService {
 
 
      Mono<CardsBasic> createNewCardsRecord(CardBasicAddDTO cardBasicAddDTO);
+     Mono<CardsBasic> saveCardsRecord(CardsBasic cardsBasic);
      Mono<CardsBasic> updateCards(CardBasicUpdateDTO cardBasicUpdateDTO);
      Mono<CardsBasic> fetchCardInfo(String cardNumber);
      Mono<Optional<CardsBasic>> fetchCardInfOptional(String cardNumber);
      Mono<CardsBasic> deleteCardInfo(String cardNumber);
-
      CardBasicDTO convertToDTO(CardsBasic cardsBasic);
      CardsBasic convertDTOToCardBasic(CardBasicAddDTO cardBasicAddDTO, ProductDef productDef);
      CardsBasic updateCardBasicFromDTO(CardBasicUpdateDTO cardBasicUpdateDTO, ProductDef productDef,CardsBasic cardsBasic);
+
+     PlasticsDTO convertPlasticDTO(Plastic plastic);
+
 
 
 

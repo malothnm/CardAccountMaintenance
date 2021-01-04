@@ -1,10 +1,7 @@
 package in.nmaloth.maintenance.controllers.account;
 
 import in.nmaloth.entity.BlockType;
-import in.nmaloth.entity.account.AccountAccumValues;
-import in.nmaloth.entity.account.AccountBasic;
-import in.nmaloth.entity.account.AccountType;
-import in.nmaloth.entity.account.BalanceTypes;
+import in.nmaloth.entity.account.*;
 import in.nmaloth.entity.customer.AddressType;
 import in.nmaloth.entity.customer.CustomerDef;
 import in.nmaloth.entity.customer.CustomerIDType;
@@ -20,7 +17,6 @@ import in.nmaloth.maintenance.repository.account.AccountBasicRepository;
 import in.nmaloth.maintenance.repository.customer.CustomerRepository;
 import in.nmaloth.maintenance.repository.product.ProductDefRepository;
 import in.nmaloth.maintenance.service.account.AccountAccumValuesService;
-import in.nmaloth.maintenance.service.account.AccountBasicService;
 import in.nmaloth.maintenance.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -87,7 +83,7 @@ class AccountsControllerTest {
     void addNewAccountsRecord() {
 
         AccountBasicAddDTO accountBasicAddDTO = createAccountBasicAddDTO();
-        accountBasicAddDTO.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasicAddDTO.setCustomerNumber(customerDef.getCustomerId());
 
         webTestClient.post()
                 .uri(EndPoints.ACCOUNTS)
@@ -98,9 +94,9 @@ class AccountsControllerTest {
                 .value(accountsCombinedDTO -> {
 
                     AccountAccumValues accountAccumValues =accountAccumValuesRepository
-                            .findByAccountNumber(accountsCombinedDTO.getAccountAccumValuesDTO().getAccountNumber()).get();
+                            .findById(accountsCombinedDTO.getAccountAccumValuesDTO().getAccountId()).get();
 
-                    Optional<AccountBasic> accountBasicOptional = accountBasicRepository.findById(accountsCombinedDTO.getAccountBasicDTO().getAccountNumber());
+                    Optional<AccountBasic> accountBasicOptional = accountBasicRepository.findById(accountsCombinedDTO.getAccountBasicDTO().getAccountId());
 
                     int accountAccumValuesBalanceSize = accountAccumValues.getBalancesMap().size();
 
@@ -121,7 +117,7 @@ class AccountsControllerTest {
     void addNewAccountsRecord1() {
 
         AccountBasicAddDTO accountBasicAddDTO = createAccountBasicAddDTO();
-        accountBasicAddDTO.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasicAddDTO.setCustomerNumber(customerDef.getCustomerId());
 
         accountBasicAddDTO.setOrg(999);
 
@@ -152,8 +148,8 @@ class AccountsControllerTest {
     void addNewAccountsRecord3() {
 
         AccountBasicAddDTO accountBasicAddDTO = createAccountBasicAddDTO();
-        accountBasicAddDTO.setCustomerNumber(customerDef.getCustomerNumber());
-        accountBasicAddDTO.setAccountNumber(null);
+        accountBasicAddDTO.setCustomerNumber(customerDef.getCustomerId());
+        accountBasicAddDTO.setAccountId(null);
 
         webTestClient.post()
                 .uri(EndPoints.ACCOUNTS)
@@ -164,9 +160,9 @@ class AccountsControllerTest {
                 .value(accountsCombinedDTO -> {
 
                     AccountAccumValues accountAccumValues =accountAccumValuesRepository
-                            .findByAccountNumber(accountsCombinedDTO.getAccountAccumValuesDTO().getAccountNumber()).get();
+                            .findById(accountsCombinedDTO.getAccountAccumValuesDTO().getAccountId()).get();
 
-                    Optional<AccountBasic> accountBasicOptional = accountBasicRepository.findById(accountsCombinedDTO.getAccountBasicDTO().getAccountNumber());
+                    Optional<AccountBasic> accountBasicOptional = accountBasicRepository.findById(accountsCombinedDTO.getAccountBasicDTO().getAccountId());
 
                     int accountAccumValuesBalanceSize = accountAccumValues.getBalancesMap().size();
 
@@ -185,10 +181,10 @@ class AccountsControllerTest {
     void getAccounts() {
 
         AccountBasic accountBasic = createAccountBasic();
-        accountBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasic.setCustomerNumber(customerDef.getCustomerId());
         accountBasicRepository.save(accountBasic);
 
-        String uri = EndPoints.ACCOUNTS_ACCOUNT_NBR.replace("{accountNumber}",accountBasic.getAccountNumber());
+        String uri = EndPoints.ACCOUNTS_ACCOUNT_NBR.replace("{accountNumber}",accountBasic.getAccountId());
         webTestClient.get()
                 .uri(uri)
                 .exchange()
@@ -201,10 +197,10 @@ class AccountsControllerTest {
     void getAccounts1() {
 
         AccountBasic accountBasic = createAccountBasic();
-        accountBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasic.setCustomerNumber(customerDef.getCustomerId());
 //        accountBasicRepository.save(accountBasic);
 
-        String uri = EndPoints.ACCOUNTS_ACCOUNT_NBR.replace("{accountNumber}",accountBasic.getAccountNumber());
+        String uri = EndPoints.ACCOUNTS_ACCOUNT_NBR.replace("{accountNumber}",accountBasic.getAccountId());
         webTestClient.get()
                 .uri(uri)
                 .exchange()
@@ -217,10 +213,10 @@ class AccountsControllerTest {
     void deleteAccounts() {
 
         AccountBasic accountBasic = createAccountBasic();
-        accountBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasic.setCustomerNumber(customerDef.getCustomerId());
         accountBasicRepository.save(accountBasic);
 
-        String uri = EndPoints.ACCOUNTS_ACCOUNT_NBR.replace("{accountNumber}",accountBasic.getAccountNumber());
+        String uri = EndPoints.ACCOUNTS_ACCOUNT_NBR.replace("{accountNumber}",accountBasic.getAccountId());
         webTestClient.delete()
                 .uri(uri)
                 .exchange()
@@ -228,20 +224,20 @@ class AccountsControllerTest {
                 .expectBody(AccountBasicDTO.class)
                 .value(accountBasicDTO -> {
 
-                    Optional<AccountBasic> accountBasicOptional = accountBasicRepository.findById(accountBasicDTO.getAccountNumber());
+                    Optional<AccountBasic> accountBasicOptional = accountBasicRepository.findById(accountBasicDTO.getAccountId());
 
                     assertTrue(accountBasicOptional.isEmpty());
 
                 })
         ;
-        
+
     }
 
     @Test
     void deleteAccounts1() {
 
         AccountBasic accountBasic = createAccountBasic();
-        accountBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasic.setCustomerNumber(customerDef.getCustomerId());
         accountBasicRepository.save(accountBasic);
 
         String uri = EndPoints.ACCOUNTS_ACCOUNT_NBR.replace("{accountNumber}","12345");
@@ -258,14 +254,13 @@ class AccountsControllerTest {
     void updateAccounts() {
 
         AccountBasic accountBasic = createAccountBasic();
-        accountBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasic.setCustomerNumber(customerDef.getCustomerId());
         accountBasicRepository.save(accountBasic);
 
-        AccountAccumValues accountAccumValues = accountAccumValuesService.initializeAccumValues(accountBasic.getAccountNumber(),
-                accountBasic.getLimitsMap().keySet());
+        AccountAccumValues accountAccumValues = createAccountAccum(accountBasic.getAccountId());
         accountAccumValuesRepository.save(accountAccumValues);
 
-        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(true,accountBasic.getAccountNumber(),null);
+        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(true,accountBasic.getAccountId(),null);
 
         webTestClient
                 .put()
@@ -276,8 +271,8 @@ class AccountsControllerTest {
                 .expectBody(AccountsCombinedDTO.class)
                 .value(accountsCombinedDTO -> {
 
-                    AccountBasic accountBasic1 = accountBasicRepository.findById(accountBasic.getAccountNumber()).get();
-                    AccountAccumValues accountAccumValues1 = accountAccumValuesRepository.findByAccountNumber(accountBasic.getAccountNumber()).get();
+                    AccountBasic accountBasic1 = accountBasicRepository.findById(accountBasic.getAccountId()).get();
+                    AccountAccumValues accountAccumValues1 = accountAccumValuesRepository.findById(accountBasic.getAccountId()).get();
 
                     Long creditLimitValue = 100000L;
                     Long cashLimitValue = 60000L;
@@ -290,23 +285,23 @@ class AccountsControllerTest {
 
 
 
-                    Long creditLimit = accountBasic1.getLimitsMap().get(BalanceTypes.CURRENT_BALANCE);
-                    Long cashLimit = accountBasic1.getLimitsMap().get(BalanceTypes.CASH_BALANCE);
-                    Long internationalCashLimit = accountBasic1.getLimitsMap().get(BalanceTypes.INTERNATIONAL_CASH);
-                    Long internationalLimit = accountBasic1.getLimitsMap().get(BalanceTypes.INTERNATIONAL);
-                    Long installmentLimit = accountBasic1.getLimitsMap().get(BalanceTypes.INSTALLMENT_BALANCE);
-                    Long installmentCashLimit  = accountBasic1.getLimitsMap().get(BalanceTypes.INSTALLMENT_CASH);
-                    Long internationalInstallmentLimit = accountBasic1.getLimitsMap().get(BalanceTypes.INTERNATIONAL_INSTALLMENT);
+                    Long creditLimit = accountAccumValues1.getLimitsMap().get(BalanceTypes.CURRENT_BALANCE);
+                    Long cashLimit = accountAccumValues1.getLimitsMap().get(BalanceTypes.CASH_BALANCE);
+                    Long internationalCashLimit = accountAccumValues1.getLimitsMap().get(BalanceTypes.INTERNATIONAL_CASH);
+                    Long internationalLimit = accountAccumValues1.getLimitsMap().get(BalanceTypes.INTERNATIONAL);
+                    Long installmentLimit = accountAccumValues1.getLimitsMap().get(BalanceTypes.INSTALLMENT_BALANCE);
+                    Long installmentCashLimit  = accountAccumValues1.getLimitsMap().get(BalanceTypes.INSTALLMENT_CASH);
+                    Long internationalInstallmentLimit = accountAccumValues1.getLimitsMap().get(BalanceTypes.INTERNATIONAL_INSTALLMENT);
 
 
                     assertAll(
-                            ()-> assertEquals(accountBasicUpdateDTO.getAccountNumber(),accountBasic1.getAccountNumber()),
+                            ()-> assertEquals(accountBasicUpdateDTO.getAccountId(),accountBasic1.getAccountId()),
                             ()-> assertEquals(Util.getBlockType(accountBasicUpdateDTO.getBlockType()),accountBasic1.getBlockType()),
                             ()-> assertEquals(accountBasicUpdateDTO.getBillingCurrencyCode(),accountBasic1.getBillingCurrencyCode()),
                             ()-> assertEquals(accountBasic.getBlockType(),accountBasic1.getPreviousBlockType()),
                             ()-> assertEquals(accountBasic.getDateBlockApplied(),accountBasic1.getDatePreviousBLockType()),
                             ()-> assertNotNull(accountBasic1.getDateBlockApplied()),
-                            ()-> assertEquals(7,accountBasic1.getLimitsMap().size()),
+                            ()-> assertEquals(7,accountAccumValues1.getLimitsMap().size()),
                             ()-> assertNull(installmentCashLimit),
                             ()-> assertEquals(creditLimitValue,creditLimit),
                             ()-> assertEquals(internationalCashLimitValue,internationalCashLimit),
@@ -326,14 +321,13 @@ class AccountsControllerTest {
     void updateAccounts1() {
 
         AccountBasic accountBasic = createAccountBasic();
-        accountBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasic.setCustomerNumber(customerDef.getCustomerId());
         accountBasicRepository.save(accountBasic);
 
-//        AccountAccumValues accountAccumValues = accountAccumValuesService.initializeAccumValues(accountBasic.getAccountNumber(),
-//                accountBasic.getLimitsMap().keySet());
-//        accountAccumValuesRepository.save(accountAccumValues);
+        AccountAccumValues accountAccumValues = createAccountAccum(accountBasic.getAccountId());
+        accountAccumValuesRepository.save(accountAccumValues);
 
-        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(true,accountBasic.getAccountNumber(),null);
+        AccountBasicUpdateDTO accountBasicUpdateDTO = createAccountUpdateDTO(true,"123456789",null);
 
         webTestClient
                 .put()
@@ -351,14 +345,13 @@ class AccountsControllerTest {
     void fetchAccountLimits() {
 
         AccountBasic accountBasic = createAccountBasic();
-        accountBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasic.setCustomerNumber(customerDef.getCustomerId());
         accountBasicRepository.save(accountBasic);
 
-        AccountAccumValues accountAccumValues = accountAccumValuesService.initializeAccumValues(accountBasic.getAccountNumber(),
-                accountBasic.getLimitsMap().keySet());
+        AccountAccumValues accountAccumValues = createAccountAccum(accountBasic.getAccountId());
         accountAccumValuesRepository.save(accountAccumValues);
 
-        String url = EndPoints.ACCOUNTS_LIMITS_ACCOUNT_NBR.replace("{accountNumber}",accountAccumValues.getAccountNumber());
+        String url = EndPoints.ACCOUNTS_LIMITS_ACCOUNT_NBR.replace("{accountNumber}",accountAccumValues.getAccountId());
 
         webTestClient
                 .get()
@@ -376,14 +369,13 @@ class AccountsControllerTest {
     void fetchAccountLimits1() {
 
         AccountBasic accountBasic = createAccountBasic();
-        accountBasic.setCustomerNumber(customerDef.getCustomerNumber());
+        accountBasic.setCustomerNumber(customerDef.getCustomerId());
         accountBasicRepository.save(accountBasic);
 
-        AccountAccumValues accountAccumValues = accountAccumValuesService.initializeAccumValues(accountBasic.getAccountNumber(),
-                accountBasic.getLimitsMap().keySet());
+        AccountAccumValues accountAccumValues = createAccountAccum(accountBasic.getAccountId());
 //        accountAccumValuesRepository.save(accountAccumValues);
 
-        String url = EndPoints.ACCOUNTS_LIMITS_ACCOUNT_NBR.replace("{accountNumber}",accountAccumValues.getAccountNumber());
+        String url = EndPoints.ACCOUNTS_LIMITS_ACCOUNT_NBR.replace("{accountNumber}",accountAccumValues.getAccountId());
 
         webTestClient
                 .get()
@@ -433,8 +425,7 @@ class AccountsControllerTest {
     }
 
 
-
-    private AccountBasic createAccountBasic(){
+    private AccountAccumValues createAccountAccum(String accountId){
 
         Map<BalanceTypes,Long> balanceTypesMap = new HashMap<>();
 
@@ -447,14 +438,47 @@ class AccountsControllerTest {
         balanceTypesMap.put(BalanceTypes.INTERNATIONAL_INSTALLMENT,10000L);
 
 
+        AccountBalances accountBalance = AccountBalances.builder()
+                .memoCr(0L)
+                .memoDb(0L)
+                .postedBalance(0L)
+                .build();
+
+        Map<BalanceTypes, AccountBalances> accountBalancesMap = new HashMap<>();
+
+        accountBalancesMap.put(BalanceTypes.CURRENT_BALANCE,accountBalance);
+        accountBalancesMap.put(BalanceTypes.CASH_BALANCE,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INTERNATIONAL_CASH,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INTERNATIONAL,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INSTALLMENT_BALANCE,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INSTALLMENT_CASH,accountBalance);
+        accountBalancesMap.put(BalanceTypes.INTERNATIONAL_INSTALLMENT,accountBalance);
+
+
+
+        return AccountAccumValues.builder()
+                .org(1)
+                .product(201)
+                .accountId(accountId)
+                .limitsMap(balanceTypesMap)
+                .balancesMap(accountBalancesMap)
+                .build();
+
+    }
+
+
+    private AccountBasic createAccountBasic(){
+
+
+
+
         return AccountBasic.builder()
                 .org(001)
                 .product(201)
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .blockType(BlockType.BLOCK_DECLINE)
                 .dateBlockApplied(LocalDateTime.now())
                 .billingCurrencyCode("840")
-                .limitsMap(balanceTypesMap)
                 .datePreviousBLockType(LocalDateTime.of(2020,12,23,11,24,30))
                 .previousBlockType(BlockType.BLOCK_SUSPECTED_FRAUD)
                 .accountType(AccountType.CREDIT)
@@ -482,7 +506,7 @@ class AccountsControllerTest {
         );
 
         return AccountBasicAddDTO.builder()
-                .accountNumber(UUID.randomUUID().toString().replace("-",""))
+                .accountId(UUID.randomUUID().toString().replace("-",""))
                 .org(001)
                 .product(201)
                 .billingCurrencyCode("840")
@@ -525,7 +549,7 @@ class AccountsControllerTest {
     private AccountBasicUpdateDTO createAccountUpdateDTO(boolean allfields , String accountNumber, List<Integer> fieldList){
 
         AccountBasicUpdateDTO.AccountBasicUpdateDTOBuilder builder = AccountBasicUpdateDTO.builder()
-                .accountNumber(accountNumber);
+                .accountId(accountNumber);
 
         List<BalanceTypesDTO> balanceTypesDTOListAdd = new ArrayList<>();
         List<BalanceTypesDTO> balanceTypesDTOListDelete = new ArrayList<>();
@@ -628,7 +652,7 @@ class AccountsControllerTest {
 
 
         CustomerDef.CustomerDefBuilder builder = CustomerDef.builder()
-                .customerNumber(UUID.randomUUID().toString().replace("-",""))
+                .customerId(UUID.randomUUID().toString().replace("-",""))
                 .customerType(CustomerType.OWNER)
                 .addressType(AddressType.PRIMARY)
                 .customerName("Test 1")

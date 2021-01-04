@@ -14,7 +14,7 @@ public interface InstrumentService {
     Mono<Instrument> createNewInstrument(InstrumentAddDTO instrumentAddDTO);
     Mono<Instrument> updateInstrument(InstrumentUpdateDTO instrumentUpdateDTO);
     Mono<Instrument> fetchInstrument(String instrumentNumber);
-    Flux<Instrument> fetchAllInstrumentsForCard(String cardNumber);
+    Flux<Instrument> fetchAllInstrumentsForCard(String cardId);
     Mono<Instrument> deleteInstrument(String instrumentNumber);
     Flux<Instrument> deleteAllInstrumentsForCard(String cardNumber);
     Mono<Instrument> saveInstrument(Instrument instrument);
